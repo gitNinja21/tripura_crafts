@@ -98,25 +98,23 @@ _PAGE_CSS = """
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HOME — serves the HTML file as a full-bleed experience
 # ═══════════════════════════════════════════════════════════════════════════════
-def render_home():
-    st.markdown(_HOME_CSS, unsafe_allow_html=True)
-
+@st.cache_data(show_spinner=False)
+def _build_home_html():
+    """Build and cache the home page HTML — runs once, reused on every reload."""
     with open(HTML_PATH, "r", encoding="utf-8") as f:
         html = f.read()
 
-    # 1. Inline all images as base64 (so they load inside the Streamlit iframe)
+    # Inline images as base64 (cached so encoding only happens once)
     html = _inline_images(html, _DIR)
 
-    # 2. Override hero min-height: 100vh → fixed height
-    #    (inside an iframe, 100vh = iframe height, making hero impossibly tall)
+    # Fix hero height inside iframe
     html = html.replace(
         "</head>",
         "<style>.hero { min-height: 620px !important; }</style>\n</head>",
         1,
     )
 
-    # 3. Inject auto-resize script so iframe grows to full content height
-    #    (critical for mobile where stacked sections are much taller)
+    # Auto-resize iframe to full content height (fixes mobile crop)
     auto_resize = """
     <script>
       function _sendHeight() {
@@ -124,16 +122,18 @@ def render_home():
         window.parent.postMessage({type: 'streamlit:setFrameHeight', height: h}, '*');
       }
       window.addEventListener('load', _sendHeight);
-      // Also fire after images and fonts finish loading
       window.addEventListener('resize', _sendHeight);
       setTimeout(_sendHeight, 500);
       setTimeout(_sendHeight, 1500);
     </script>
     </body>"""
     html = html.replace("</body>", auto_resize, 1)
+    return html
 
-    # 4. Serve — height=0 lets the auto-resize script control actual height
-    components.html(html, height=4400, scrolling=False)
+
+def render_home():
+    st.markdown(_HOME_CSS, unsafe_allow_html=True)
+    components.html(_build_home_html(), height=4400, scrolling=False)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
