@@ -101,31 +101,44 @@ _PAGE_CSS = """
 # ═══════════════════════════════════════════════════════════════════════════════
 @st.cache_data(show_spinner=False)
 def _build_home_html():
-    """Build and cache the home page HTML — runs once, reused on every reload."""
+    """
+    Parse the HTML file and return CSS + body content only.
+    Injected via st.markdown (no iframe) so navigation links work natively.
+    """
     with open(HTML_PATH, "r", encoding="utf-8") as f:
-        html = f.read()
+        raw = f.read()
 
-    # Point image src to Streamlit's static file server (no base64 needed)
-    # Images live in tripura_crafts/static/ and are served at /app/static/
+    # Extract <link> tags (Google Fonts etc.)
+    links = "\n".join(re.findall(r"<link[^>]+>", raw))
+
+    # Extract all <style> blocks and merge
+    styles = re.findall(r"<style[^>]*>(.*?)</style>", raw, re.DOTALL)
+    css = "<style>" + "\n".join(styles) + "\n.hero{min-height:620px!important}</style>"
+
+    # Extract body content
+    m = re.search(r"<body[^>]*>(.*?)</body>", raw, re.DOTALL)
+    body = m.group(1) if m else raw
+
+    # Replace onclick="navigateTo('xxx')" → href="/?nav=xxx"
+    # This turns JS navigation into plain browser links — works perfectly in st.markdown
+    body = re.sub(r'onclick="navigateTo\(\'(\w+)\'\)"', r'href="/?nav=\1"', body)
+
+    # Remove <script> blocks (st.markdown doesn't execute them)
+    body = re.sub(r"<script[^>]*>.*?</script>", "", body, flags=re.DOTALL)
+
+    # Point images to static file server
     for img in ["women_wear.jpg", "men_wear.jpg", "jewellery.jpg",
                 "home_decor.jpg", "sacred_silver.jpg"]:
-        html = html.replace(f'src="{img}"', f'src="/app/static/{img}"')
+        body = body.replace(f'src="{img}"', f'src="/app/static/{img}"')
 
-    # Fix hero height inside iframe
-    html = html.replace(
-        "</head>",
-        "<style>.hero { min-height: 620px !important; }</style>\n</head>",
-        1,
-    )
-
-    return html
+    return links + "\n" + css + "\n" + body
 
 
 def render_home():
+    # Hide all Streamlit chrome — home page is fully custom HTML
     st.markdown(_HOME_CSS, unsafe_allow_html=True)
-    # scrolling=True lets the iframe scroll internally — no blank space
-    # height=900 fills the viewport; user scrolls within the iframe
-    components.html(_build_home_html(), height=900, scrolling=True)
+    # Inject HTML directly into DOM (no iframe) — links navigate the page natively
+    st.markdown(_build_home_html(), unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
