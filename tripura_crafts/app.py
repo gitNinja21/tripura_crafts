@@ -115,8 +115,24 @@ def render_home():
         1,
     )
 
-    # 3. Serve it — height covers all sections (hero + cards + jewellery +
-    #    heritage + help + contact + footer), scrolling handled by outer page
+    # 3. Inject auto-resize script so iframe grows to full content height
+    #    (critical for mobile where stacked sections are much taller)
+    auto_resize = """
+    <script>
+      function _sendHeight() {
+        var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+        window.parent.postMessage({type: 'streamlit:setFrameHeight', height: h}, '*');
+      }
+      window.addEventListener('load', _sendHeight);
+      // Also fire after images and fonts finish loading
+      window.addEventListener('resize', _sendHeight);
+      setTimeout(_sendHeight, 500);
+      setTimeout(_sendHeight, 1500);
+    </script>
+    </body>"""
+    html = html.replace("</body>", auto_resize, 1)
+
+    # 4. Serve — height=0 lets the auto-resize script control actual height
     components.html(html, height=4400, scrolling=False)
 
 
