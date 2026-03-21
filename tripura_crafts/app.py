@@ -99,46 +99,241 @@ _PAGE_CSS = """
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HOME — serves the HTML file as a full-bleed experience
 # ═══════════════════════════════════════════════════════════════════════════════
-@st.cache_data(show_spinner=False)
-def _build_home_html():
-    """
-    Parse the HTML file and return CSS + body content only.
-    Injected via st.markdown (no iframe) so navigation links work natively.
-    """
-    with open(HTML_PATH, "r", encoding="utf-8") as f:
-        raw = f.read()
+_HOME_PAGE_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@300;400;600&display=swap');
 
-    # Extract <link> tags (Google Fonts etc.)
-    links = "\n".join(re.findall(r"<link[^>]+>", raw))
+body, [data-testid="stAppViewContainer"] {
+    background: #1A0A00 !important;
+}
+.block-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+}
 
-    # Extract all <style> blocks and merge
-    styles = re.findall(r"<style[^>]*>(.*?)</style>", raw, re.DOTALL)
-    css = "<style>" + "\n".join(styles) + "\n.hero{min-height:620px!important}</style>"
+/* ── Hero ── */
+.home-hero {
+    background: linear-gradient(160deg, #1A0A00 0%, #3d1500 50%, #1A0A00 100%);
+    text-align: center;
+    padding: 90px 24px 80px;
+    border-bottom: 1px solid rgba(200,151,42,0.2);
+}
+.home-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    color: #C8972A;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+.home-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    color: #FAF3E8;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+.home-title em { font-style: italic; color: #C8972A; }
+.home-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: rgba(250,243,232,0.6);
+    max-width: 560px;
+    margin: 0 auto 40px;
+    line-height: 1.8;
+}
+.home-divider {
+    width: 80px; height: 1px;
+    background: linear-gradient(90deg, transparent, #C8972A, transparent);
+    margin: 0 auto;
+}
 
-    # Extract body content
-    m = re.search(r"<body[^>]*>(.*?)</body>", raw, re.DOTALL)
-    body = m.group(1) if m else raw
+/* ── Section label ── */
+.section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    color: #C8972A;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 10px;
+}
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    color: #FAF3E8;
+    text-align: center;
+    margin-bottom: 40px;
+}
 
-    # Replace onclick="navigateTo('xxx')" → href="/?nav=xxx"
-    # This turns JS navigation into plain browser links — works perfectly in st.markdown
-    body = re.sub(r'onclick="navigateTo\(\'(\w+)\'\)"', r'href="/?nav=\1"', body)
+/* ── Collection cards ── */
+.home-card {
+    border-radius: 8px;
+    overflow: hidden;
+    background: #2a1200;
+    border: 1px solid rgba(200,151,42,0.15);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+    cursor: pointer;
+}
+.home-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(200,151,42,0.5);
+}
+.home-card-img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    display: block;
+}
+.home-card-img-placeholder {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: linear-gradient(160deg, #2a1200 0%, #4a2000 100%);
+    display: flex; align-items: center; justify-content: center;
+}
+.home-card-body { padding: 20px; }
+.home-card-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: #C8972A;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+.home-card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: #FAF3E8;
+    margin-bottom: 8px;
+}
+.home-card-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.9rem;
+    color: rgba(250,243,232,0.5);
+    line-height: 1.6;
+}
 
-    # Remove <script> blocks (st.markdown doesn't execute them)
-    body = re.sub(r"<script[^>]*>.*?</script>", "", body, flags=re.DOTALL)
+/* ── Explore button ── */
+.stButton > button {
+    background: transparent !important;
+    border: 1px solid #C8972A !important;
+    color: #C8972A !important;
+    font-family: 'Cinzel', serif !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.25em !important;
+    padding: 10px 24px !important;
+    border-radius: 2px !important;
+    width: 100% !important;
+    transition: all 0.3s !important;
+}
+.stButton > button:hover {
+    background: #C8972A !important;
+    color: #1A0A00 !important;
+}
 
-    # Point images to static file server
-    for img in ["women_wear.jpg", "men_wear.jpg", "jewellery.jpg",
-                "home_decor.jpg", "sacred_silver.jpg"]:
-        body = body.replace(f'src="{img}"', f'src="/app/static/{img}"')
-
-    return links + "\n" + css + "\n" + body
-
+/* ── Footer ── */
+.home-footer {
+    text-align: center;
+    padding: 40px 20px 30px;
+    border-top: 1px solid rgba(200,151,42,0.15);
+    margin-top: 60px;
+}
+.home-footer-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: #FAF3E8;
+    margin-bottom: 10px;
+}
+.home-footer-tag {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: rgba(250,243,232,0.3);
+}
+</style>
+"""
 
 def render_home():
-    # Hide all Streamlit chrome — home page is fully custom HTML
     st.markdown(_HOME_CSS, unsafe_allow_html=True)
-    # Inject HTML directly into DOM (no iframe) — links navigate the page natively
-    st.markdown(_build_home_html(), unsafe_allow_html=True)
+    st.markdown(_HOME_PAGE_CSS, unsafe_allow_html=True)
+
+    # ── Hero ──────────────────────────────────────────────────────────────────
+    st.markdown("""
+    <div class="home-hero">
+        <div class="home-eyebrow">✦ &nbsp; Handcrafted in Tripura, Northeast India &nbsp; ✦</div>
+        <h1 class="home-title">Where Ancient Looms<br/>Meet <em>Timeless Beauty</em></h1>
+        <p class="home-subtitle">
+            For over two thousand years, the indigenous communities of Tripura have woven stories
+            into fabric, carved art from bamboo, and forged heritage into jewellery.
+        </p>
+        <div class="home-divider"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Collections ───────────────────────────────────────────────────────────
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown('<div class="section-label">OUR COLLECTIONS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Discover the Heritage</div>', unsafe_allow_html=True)
+
+    CARDS = [
+        {
+            "label": "WOMEN'S HERITAGE · RISA COLLECTION",
+            "name":  "Women's Wear",
+            "desc":  "Handwoven Risa, Rignai & Sarees across six distinct tribal traditions.",
+            "img":   "women_wear.jpg",
+            "nav":   "womens_wear",
+        },
+        {
+            "label": "MEN'S HERITAGE · KUBAI COLLECTION",
+            "name":  "Men's Wear",
+            "desc":  "Kubai tops & Rignai Dhoti — timeless Tripuri masculinity, handloomed.",
+            "img":   "men_wear.jpg",
+            "nav":   "mens_wear",
+        },
+        {
+            "label": "SILVER JEWELLERY · ARTISAN CRAFTED",
+            "name":  "Tribal Jewellery",
+            "desc":  "Hand-hammered silver torques, coin necklaces, and ancestral ornaments.",
+            "img":   "jewellery.jpg",
+            "nav":   "jewellery",
+        },
+        {
+            "label": "HOME DÉCOR · BAMBOO & CANE",
+            "name":  "Home Décor",
+            "desc":  "Bamboo lamps, baskets, furniture — the living forest, transformed by artisan hands.",
+            "img":   "home_decor.jpg",
+            "nav":   "home_decor",
+        },
+    ]
+
+    cols = st.columns(4, gap="medium")
+    for col, card in zip(cols, CARDS):
+        with col:
+            img_path = os.path.join(_DIR, "static", card["img"])
+            if os.path.exists(img_path):
+                st.image(img_path, use_container_width=True)
+            else:
+                st.markdown('<div class="home-card-img-placeholder"></div>', unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div style="padding: 14px 0 10px;">
+                <div class="home-card-label">{card['label']}</div>
+                <div class="home-card-name">{card['name']}</div>
+                <div class="home-card-desc">{card['desc']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            if st.button(f"Explore {card['name']} →", key=f"home_{card['nav']}"):
+                nav_to(card["nav"])
+
+    # ── Footer ────────────────────────────────────────────────────────────────
+    st.markdown("""
+    <div class="home-footer">
+        <div class="home-footer-brand">Tripura Craftsmen</div>
+        <div class="home-footer-tag">WOVEN WITH HERITAGE · ADORNED WITH TRADITION · MADE WITH LOVE</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
