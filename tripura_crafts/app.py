@@ -18,9 +18,8 @@ st.set_page_config(
 )
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-_DIR  = os.path.dirname(os.path.abspath(__file__))   # tripura_crafts/
-_ROOT = os.path.dirname(_DIR)                         # ecom_startup/
-HTML_PATH = os.path.join(_ROOT, "tripuracraftsmen_showcase.html")
+_DIR  = os.path.dirname(os.path.abspath(__file__))   # same folder as app.py
+HTML_PATH = os.path.join(_DIR, "tripuracraftsmen_showcase.html")
 
 # ── Session state ─────────────────────────────────────────────────────────────
 def _ss(k, v):
@@ -106,7 +105,7 @@ def render_home():
         html = f.read()
 
     # 1. Inline all images as base64 (so they load inside the Streamlit iframe)
-    html = _inline_images(html, _ROOT)
+    html = _inline_images(html, _DIR)
 
     # 2. Override hero min-height: 100vh → fixed height
     #    (inside an iframe, 100vh = iframe height, making hero impossibly tall)
