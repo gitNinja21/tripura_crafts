@@ -28,6 +28,7 @@ def _ss(k, v):
 
 _ss("page", "home")
 _ss("cart", {})
+_ss("womens_collection", None)   # which collection card was clicked
 
 # ── Query param routing (from HTML landing page) ──────────────────────────────
 _NAV_MAP = {
@@ -183,159 +184,232 @@ def _placeholder(title, icon, tagline):
             nav_to("home")
 
 
+# ── Shared Women's Wear data & CSS ───────────────────────────────────────────
+COLLECTIONS = [
+    {
+        "key":     "risa_royale",
+        "name":    "Risa Royale",
+        "tribe":   "Tripuri Collection",
+        "tagline": "The original. The iconic. Two thousand years on the loom.",
+        "items":   ["Risa Set", "Rignai Wrap", "Pachra Drape", "Festive Risa", "Bridal Rignai", "Everyday Set"],
+    },
+    {
+        "key":     "stripe_soul",
+        "name":    "Stripe & Soul",
+        "tribe":   "Reang Collection",
+        "tagline": "Bold stripes, ancient stories woven thread by thread.",
+        "items":   ["Rina Stripe", "Risha Weave", "Festive Rina", "Daily Risha", "Bridal Set", "Stripe Dupatta"],
+    },
+    {
+        "key":     "pinon_poetry",
+        "name":    "Pinon Poetry",
+        "tribe":   "Chakma Collection",
+        "tagline": "Where geometry meets grace.",
+        "items":   ["Pinon Wrap", "Hadi Top", "Chakma Saree", "Festive Pinon", "Geometric Set", "Hadi Dupatta"],
+    },
+    {
+        "key":     "waichum_whispers",
+        "name":    "Waichum Whispers",
+        "tribe":   "Jamatia Collection",
+        "tagline": "Quiet elegance. Roots that run deep.",
+        "items":   ["Waichum Set", "Panchi Drape", "Jamatia Saree", "Festive Waichum", "Bridal Panchi", "Daily Set"],
+    },
+    {
+        "key":     "sacred_threads",
+        "name":    "Sacred Threads",
+        "tribe":   "Mog Collection",
+        "tagline": "Woven with devotion, worn with pride.",
+        "items":   ["Mog Weave", "Sacred Wrap", "Mog Saree", "Festive Set", "Bridal Mog", "Daily Wrap"],
+    },
+    {
+        "key":     "hill_collective",
+        "name":    "The Hill Collective",
+        "tribe":   "Others",
+        "tagline": "Many tribes. One living tradition.",
+        "items":   ["Halam Weave", "Garo Drape", "Lushai Set", "Tribal Mix", "Hill Saree", "Collective Set"],
+    },
+]
+COLLECTION_MAP = {c["key"]: c for c in COLLECTIONS}
+
+_WW_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@300;400;600&display=swap');
+
+.ww-header {
+    background: linear-gradient(160deg, #1A0A00 0%, #3d1500 60%, #1A0A00 100%);
+    padding: 52px 32px 44px;
+    text-align: center;
+    border-bottom: 1px solid rgba(200,151,42,0.2);
+    margin: -2rem -3rem 0;
+}
+.ww-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    color: #C8972A;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.ww-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: #FAF3E8;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.ww-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    color: rgba(250,243,232,0.55);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+/* ── 6 collection cards grid ── */
+.coll-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    padding: 40px 0 56px;
+}
+@media (max-width: 900px) { .coll-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .coll-grid { grid-template-columns: 1fr 1fr; gap: 14px; padding: 24px 0 40px; } }
+
+.coll-card {
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.coll-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.14); }
+
+.coll-img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: linear-gradient(160deg, #e8ddd0 0%, #c8b49a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+}
+.coll-img-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.25em;
+    color: rgba(26,10,0,0.3);
+    text-transform: uppercase;
+}
+.coll-info {
+    padding: 16px 16px 20px;
+    background: #fff;
+}
+.coll-tribe {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: #C8972A;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+.coll-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: #1A0A00;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+.coll-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.85rem;
+    color: #888;
+    line-height: 1.5;
+}
+
+/* ── Product grid (collection page) ── */
+.prod-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 32px 0 48px;
+}
+@media (max-width: 768px) { .prod-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
+
+.prod-card {
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+.prod-img-placeholder {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: linear-gradient(160deg, #e8ddd0 0%, #d4c4b0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.prod-img-placeholder span {
+    font-family: 'Cinzel', serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    color: rgba(26,10,0,0.28);
+    text-transform: uppercase;
+}
+.prod-info { padding: 14px 14px 18px; }
+.prod-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: #1A0A00;
+    margin-bottom: 5px;
+}
+.prod-price {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    color: #C8972A;
+    letter-spacing: 0.1em;
+}
+
+/* collection detail header */
+.col-hero {
+    background: linear-gradient(160deg, #1A0A00 0%, #3d1500 60%, #1A0A00 100%);
+    padding: 44px 32px 36px;
+    text-align: center;
+    margin: -2rem -3rem 0;
+    border-bottom: 1px solid rgba(200,151,42,0.2);
+}
+.col-hero-tribe {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    color: #C8972A;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.col-hero-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    color: #FAF3E8;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.col-hero-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    color: rgba(250,243,232,0.5);
+}
+</style>
+"""
+
 def render_womens_wear():
     st.markdown(_PAGE_CSS, unsafe_allow_html=True)
+    st.markdown(_WW_CSS, unsafe_allow_html=True)
 
-    # ── Custom CSS for this page ──────────────────────────────────────────────
-    st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@300;400;600&display=swap');
-
-    .ww-header {
-        background: linear-gradient(160deg, #1A0A00 0%, #3d1500 60%, #1A0A00 100%);
-        padding: 52px 32px 40px;
-        text-align: center;
-        border-bottom: 1px solid rgba(200,151,42,0.2);
-    }
-    .ww-eyebrow {
-        font-family: 'Cinzel', serif;
-        font-size: 0.65rem;
-        letter-spacing: 0.35em;
-        color: #C8972A;
-        text-transform: uppercase;
-        margin-bottom: 12px;
-    }
-    .ww-title {
-        font-family: 'Playfair Display', serif;
-        font-size: clamp(1.8rem, 4vw, 3rem);
-        color: #FAF3E8;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-    .ww-subtitle {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 1.05rem;
-        color: rgba(250,243,232,0.55);
-        max-width: 500px;
-        margin: 0 auto;
-        line-height: 1.7;
-    }
-
-    /* ── Tab strip ── */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 0;
-        background: #12060000;
-        border-bottom: 1px solid rgba(200,151,42,0.2);
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        scrollbar-width: none;
-        padding: 0 12px;
-    }
-    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none; }
-    .stTabs [data-baseweb="tab"] {
-        font-family: 'Cinzel', serif !important;
-        font-size: 0.65rem !important;
-        letter-spacing: 0.2em !important;
-        color: rgba(250,243,232,0.5) !important;
-        background: transparent !important;
-        border: none !important;
-        padding: 18px 20px !important;
-        white-space: nowrap;
-        border-bottom: 2px solid transparent !important;
-        transition: all 0.3s;
-    }
-    .stTabs [aria-selected="true"] {
-        color: #C8972A !important;
-        border-bottom: 2px solid #C8972A !important;
-    }
-    .stTabs [data-baseweb="tab-panel"] {
-        padding: 0 !important;
-        background: #FAF3E8;
-    }
-    .stTabs [data-baseweb="tab-highlight"] { display: none !important; }
-
-    /* ── Collection card ── */
-    .col-header {
-        padding: 36px 28px 24px;
-        background: #1A0A00;
-        text-align: center;
-    }
-    .col-name {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.6rem;
-        color: #FAF3E8;
-        margin-bottom: 6px;
-    }
-    .col-tag {
-        font-family: 'Cinzel', serif;
-        font-size: 0.6rem;
-        letter-spacing: 0.3em;
-        color: #C8972A;
-        text-transform: uppercase;
-    }
-    .col-tagline {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 1rem;
-        color: rgba(250,243,232,0.55);
-        margin-top: 8px;
-    }
-
-    /* ── Product placeholder grid ── */
-    .prod-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        padding: 32px 24px 48px;
-        background: #FAF3E8;
-    }
-    @media (max-width: 768px) {
-        .prod-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 20px 14px 36px; }
-    }
-    @media (max-width: 480px) {
-        .prod-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-    }
-    .prod-card {
-        border-radius: 8px;
-        overflow: hidden;
-        background: #fff;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    }
-    .prod-img-placeholder {
-        width: 100%;
-        aspect-ratio: 3/4;
-        background: linear-gradient(160deg, #e8ddd0 0%, #d4c4b0 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 8px;
-    }
-    .prod-img-placeholder span {
-        font-family: 'Cinzel', serif;
-        font-size: 0.55rem;
-        letter-spacing: 0.25em;
-        color: rgba(26,10,0,0.3);
-        text-transform: uppercase;
-    }
-    .prod-info {
-        padding: 14px 14px 16px;
-    }
-    .prod-name {
-        font-family: 'Playfair Display', serif;
-        font-size: 0.95rem;
-        color: #1A0A00;
-        margin-bottom: 4px;
-    }
-    .prod-price {
-        font-family: 'Cinzel', serif;
-        font-size: 0.75rem;
-        color: #C8972A;
-        letter-spacing: 0.1em;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # ── Page header ───────────────────────────────────────────────────────────
+    # ── Header ────────────────────────────────────────────────────────────────
     st.markdown("""
     <div class="ww-header">
         <div class="ww-eyebrow">✦ &nbsp; Indigenous Handloom &nbsp; ✦</div>
@@ -348,80 +422,72 @@ def render_womens_wear():
     """, unsafe_allow_html=True)
 
     # ── Back button ───────────────────────────────────────────────────────────
-    st.markdown("<div style='background:#1A0A00; padding: 8px 20px;'>", unsafe_allow_html=True)
-    if st.button("← Home", key="ww_back"):
+    st.markdown("<br/>", unsafe_allow_html=True)
+    if st.button("← Back to Home", key="ww_back"):
         nav_to("home")
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<br/>", unsafe_allow_html=True)
 
-    # ── Collection data ───────────────────────────────────────────────────────
-    COLLECTIONS = [
-        {
-            "tab":     "Risa Royale",
-            "tribe":   "Tripuri Collection",
-            "tagline": "The original. The iconic. Two thousand years on the loom.",
-            "items":   ["Risa Set", "Rignai Wrap", "Pachra Drape", "Festive Risa", "Bridal Rignai", "Everyday Set"],
-        },
-        {
-            "tab":     "Stripe & Soul",
-            "tribe":   "Reang Collection",
-            "tagline": "Bold stripes, ancient stories woven thread by thread.",
-            "items":   ["Rina Stripe", "Risha Weave", "Festive Rina", "Daily Risha", "Bridal Set", "Stripe Dupatta"],
-        },
-        {
-            "tab":     "Pinon Poetry",
-            "tribe":   "Chakma Collection",
-            "tagline": "Where geometry meets grace.",
-            "items":   ["Pinon Wrap", "Hadi Top", "Chakma Saree", "Festive Pinon", "Geometric Set", "Hadi Dupatta"],
-        },
-        {
-            "tab":     "Waichum Whispers",
-            "tribe":   "Jamatia Collection",
-            "tagline": "Quiet elegance. Roots that run deep.",
-            "items":   ["Waichum Set", "Panchi Drape", "Jamatia Saree", "Festive Waichum", "Bridal Panchi", "Daily Set"],
-        },
-        {
-            "tab":     "Sacred Threads",
-            "tribe":   "Mog Collection",
-            "tagline": "Woven with devotion, worn with pride.",
-            "items":   ["Mog Weave", "Sacred Wrap", "Mog Saree", "Festive Set", "Bridal Mog", "Daily Wrap"],
-        },
-        {
-            "tab":     "The Hill Collective",
-            "tribe":   "Others",
-            "tagline": "Many tribes. One living tradition.",
-            "items":   ["Halam Weave", "Garo Drape", "Lushai Set", "Tribal Mix", "Hill Saree", "Collective Set"],
-        },
-    ]
+    # ── 6 collection cards — 2 per row using Streamlit columns ───────────────
+    rows = [COLLECTIONS[i:i+3] for i in range(0, len(COLLECTIONS), 3)]
+    for row in rows:
+        cols = st.columns(len(row), gap="medium")
+        for col, c in zip(cols, row):
+            with col:
+                st.markdown(f"""
+                <div class="coll-card">
+                    <div class="coll-img">
+                        <span class="coll-img-label">Photo Coming Soon</span>
+                    </div>
+                    <div class="coll-info">
+                        <div class="coll-tribe">{c['tribe']}</div>
+                        <div class="coll-name">{c['name']}</div>
+                        <div class="coll-tagline">{c['tagline']}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button(f"Explore →", key=f"coll_{c['key']}"):
+                    st.session_state.womens_collection = c["key"]
+                    nav_to("womens_collection")
 
-    # ── Tabs ──────────────────────────────────────────────────────────────────
-    tabs = st.tabs([c["tab"] for c in COLLECTIONS])
+def render_womens_collection():
+    """Individual collection page — shown when a card is clicked."""
+    key = st.session_state.get("womens_collection")
+    c   = COLLECTION_MAP.get(key)
+    if not c:
+        nav_to("womens_wear")
+        return
 
-    for tab, col in zip(tabs, COLLECTIONS):
-        with tab:
-            # Collection header
-            st.markdown(f"""
-            <div class="col-header">
-                <div class="col-tag">{col['tribe']}</div>
-                <div class="col-name">{col['tab']}</div>
-                <div class="col-tagline">{col['tagline']}</div>
+    st.markdown(_PAGE_CSS, unsafe_allow_html=True)
+    st.markdown(_WW_CSS,   unsafe_allow_html=True)
+
+    # Dark hero header
+    st.markdown(f"""
+    <div class="col-hero">
+        <div class="col-hero-tribe">{c['tribe']}</div>
+        <h1 class="col-hero-name">{c['name']}</h1>
+        <p class="col-hero-tagline">{c['tagline']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<br/>", unsafe_allow_html=True)
+    bcol1, bcol2 = st.columns([1, 5])
+    with bcol1:
+        if st.button("← Back", key="col_back"):
+            nav_to("womens_wear")
+
+    # Product placeholder grid
+    cards_html = '<div class="prod-grid">'
+    for item in c["items"]:
+        cards_html += f"""
+        <div class="prod-card">
+            <div class="prod-img-placeholder"><span>Photo Coming Soon</span></div>
+            <div class="prod-info">
+                <div class="prod-name">{item}</div>
+                <div class="prod-price">₹ — — —</div>
             </div>
-            """, unsafe_allow_html=True)
-
-            # Product placeholder grid
-            cards_html = '<div class="prod-grid">'
-            for item in col["items"]:
-                cards_html += f"""
-                <div class="prod-card">
-                    <div class="prod-img-placeholder">
-                        <span>Photo Coming Soon</span>
-                    </div>
-                    <div class="prod-info">
-                        <div class="prod-name">{item}</div>
-                        <div class="prod-price">₹ — — —</div>
-                    </div>
-                </div>"""
-            cards_html += "</div>"
-            st.markdown(cards_html, unsafe_allow_html=True)
+        </div>"""
+    cards_html += "</div>"
+    st.markdown(cards_html, unsafe_allow_html=True)
 
 
 def render_mens_wear():
@@ -548,12 +614,13 @@ def render_track_order():
 # ═══════════════════════════════════════════════════════════════════════════════
 page = st.session_state.page
 
-if   page == "home":         render_home()
-elif page == "womens_wear":  render_womens_wear()
-elif page == "mens_wear":    render_mens_wear()
-elif page == "jewellery":    render_jewellery()
-elif page == "home_decor":   render_home_decor()
-elif page == "contact":      render_contact()
-elif page == "help":         render_help()
-elif page == "track_order":  render_track_order()
-else:                        render_home()
+if   page == "home":                render_home()
+elif page == "womens_wear":         render_womens_wear()
+elif page == "womens_collection":   render_womens_collection()
+elif page == "mens_wear":           render_mens_wear()
+elif page == "jewellery":           render_jewellery()
+elif page == "home_decor":          render_home_decor()
+elif page == "contact":             render_contact()
+elif page == "help":                render_help()
+elif page == "track_order":         render_track_order()
+else:                               render_home()
