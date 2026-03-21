@@ -117,17 +117,35 @@ def _build_home_html():
         1,
     )
 
-    # Auto-resize iframe to full content height (fixes mobile crop)
+    # Auto-resize iframe — robust version that waits for images + fonts + animations
     auto_resize = """
     <script>
       function _sendHeight() {
-        var h = document.documentElement.scrollHeight || document.body.scrollHeight;
-        window.parent.postMessage({type: 'streamlit:setFrameHeight', height: h}, '*');
+        var h = Math.max(
+          document.body.scrollHeight,
+          document.body.offsetHeight,
+          document.documentElement.scrollHeight,
+          document.documentElement.offsetHeight
+        );
+        window.parent.postMessage({type: 'streamlit:setFrameHeight', height: h + 40}, '*');
       }
-      window.addEventListener('load', _sendHeight);
+
+      // Fire immediately, then after images/fonts/animations settle
+      _sendHeight();
+      document.addEventListener('DOMContentLoaded', _sendHeight);
+      window.addEventListener('load', function() {
+        _sendHeight();
+        setTimeout(_sendHeight, 300);
+        setTimeout(_sendHeight, 800);
+        setTimeout(_sendHeight, 1500);
+        setTimeout(_sendHeight, 3000);
+      });
       window.addEventListener('resize', _sendHeight);
-      setTimeout(_sendHeight, 500);
-      setTimeout(_sendHeight, 1500);
+
+      // Watch for any layout changes (scroll reveal animations changing opacity/transform)
+      if (window.ResizeObserver) {
+        new ResizeObserver(_sendHeight).observe(document.body);
+      }
     </script>
     </body>"""
     html = html.replace("</body>", auto_resize, 1)
@@ -136,7 +154,9 @@ def _build_home_html():
 
 def render_home():
     st.markdown(_HOME_CSS, unsafe_allow_html=True)
-    components.html(_build_home_html(), height=4400, scrolling=False)
+    # height=8000 is a safe fallback for tall mobile layouts;
+    # the auto-resize script above will correct it to exact content height
+    components.html(_build_home_html(), height=8000, scrolling=False)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
