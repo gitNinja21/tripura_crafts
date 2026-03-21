@@ -104,8 +104,11 @@ def _build_home_html():
     with open(HTML_PATH, "r", encoding="utf-8") as f:
         html = f.read()
 
-    # Inline images as base64 (cached so encoding only happens once)
-    html = _inline_images(html, _DIR)
+    # Point image src to Streamlit's static file server (no base64 needed)
+    # Images live in tripura_crafts/static/ and are served at /app/static/
+    for img in ["women_wear.jpg", "men_wear.jpg", "jewellery.jpg",
+                "home_decor.jpg", "sacred_silver.jpg"]:
+        html = html.replace(f'src="{img}"', f'src="/app/static/{img}"')
 
     # Fix hero height inside iframe
     html = html.replace(
