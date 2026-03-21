@@ -63,17 +63,11 @@ _PAGE_CSS = """
 </style>
 """
 
-# ── Home page CSS ─────────────────────────────────────────────────────────────
-_HOME_PAGE_CSS = """
+# ── Home page CSS (kept for reference — now unused since HTML is served as static file) ──
+_HOME_PAGE_CSS_UNUSED = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@300;400;600&display=swap');
-
-body, [data-testid="stAppViewContainer"] {
-    background: #1A0A00 !important;
-}
-.block-container { padding: 0 !important; max-width: 100% !important; }
-
-/* Hero */
+/* This block is no longer used — the HTML landing page is served at
+   /app/static/landing_page.html and embedded via an unsandboxed iframe. */
 .home-hero {
     background: linear-gradient(160deg, #1A0A00 0%, #3d1500 50%, #1A0A00 100%);
     text-align: center;
@@ -220,86 +214,31 @@ body, [data-testid="stAppViewContainer"] {
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HOME PAGE
+#  Strategy: serve landing_page.html from Streamlit's static file server and
+#  embed it via a plain <iframe> injected with st.markdown.  Unlike the iframe
+#  created by st.components.v1.html(), this one has NO sandbox attribute, so
+#  window.top.location.href navigation works perfectly.
 # ═══════════════════════════════════════════════════════════════════════════════
 def render_home():
-    st.markdown(_HOME_CSS, unsafe_allow_html=True)
-    st.markdown(_HOME_PAGE_CSS, unsafe_allow_html=True)
-
-    # Hero
+    # Hide all Streamlit chrome so the HTML page is full-bleed
     st.markdown("""
-    <div class="home-hero">
-        <div class="home-eyebrow">✦ &nbsp; Handcrafted in Tripura, Northeast India &nbsp; ✦</div>
-        <h1 class="home-title">Where Ancient Looms<br/>Meet <em>Timeless Beauty</em></h1>
-        <p class="home-subtitle">
-            For over two thousand years, the indigenous communities of Tripura have woven stories
-            into fabric, carved art from bamboo, and forged heritage into jewellery.
-        </p>
-        <div class="home-divider"></div>
-    </div>
+    <style>
+      #MainMenu, header, footer { display: none !important; }
+      .block-container { padding: 0 !important; max-width: 100% !important; }
+      section[data-testid="stSidebar"] { display: none !important; }
+      [data-testid="stAppViewContainer"] { padding: 0 !important; }
+      body { overflow-x: hidden; }
+    </style>
     """, unsafe_allow_html=True)
 
-    # Section header
-    st.markdown('<div class="section-label">OUR COLLECTIONS</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Discover the Heritage</div>', unsafe_allow_html=True)
-
-    # 4 collection cards
-    CARDS = [
-        {
-            "label": "WOMEN'S HERITAGE · RISA COLLECTION",
-            "name":  "Women's Wear",
-            "desc":  "Handwoven Risa, Rignai & Sarees across six distinct tribal traditions.",
-            "img":   "women_wear.jpg",
-            "nav":   "womens_wear",
-        },
-        {
-            "label": "MEN'S HERITAGE · KUBAI COLLECTION",
-            "name":  "Men's Wear",
-            "desc":  "Kubai tops & Rignai Dhoti — timeless Tripuri masculinity, handloomed.",
-            "img":   "men_wear.jpg",
-            "nav":   "mens_wear",
-        },
-        {
-            "label": "SILVER JEWELLERY · ARTISAN CRAFTED",
-            "name":  "Tribal Jewellery",
-            "desc":  "Hand-hammered silver torques, coin necklaces, and ancestral ornaments.",
-            "img":   "jewellery.jpg",
-            "nav":   "jewellery",
-        },
-        {
-            "label": "HOME DÉCOR · BAMBOO & CANE",
-            "name":  "Home Décor",
-            "desc":  "Bamboo lamps, baskets, furniture — the living forest, transformed by artisan hands.",
-            "img":   "home_decor.jpg",
-            "nav":   "home_decor",
-        },
-    ]
-
-    cols = st.columns(4, gap="medium")
-    for col, card in zip(cols, CARDS):
-        with col:
-            # Use static file server URL — reliable on Railway
-            img_url = f"/app/static/{card['img']}"
-            st.markdown(f"""
-            <div class="home-card">
-                <img src="{img_url}" alt="{card['name']}"
-                     onerror="this.parentElement.innerHTML='<div class=home-card-placeholder></div>'"/>
-                <div class="home-card-body">
-                    <div class="home-card-label">{card['label']}</div>
-                    <div class="home-card-name">{card['name']}</div>
-                    <div class="home-card-desc">{card['desc']}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            if st.button(f"Explore {card['name']} →", key=f"home_{card['nav']}"):
-                nav_to(card["nav"])
-
-    # Footer
+    # Unsandboxed iframe — full HTML experience with working navigation
     st.markdown("""
-    <div class="home-footer">
-        <div class="home-footer-brand">Tripura Craftsmen</div>
-        <div class="home-footer-tag">WOVEN WITH HERITAGE · ADORNED WITH TRADITION · MADE WITH LOVE</div>
-    </div>
+    <iframe
+      id="tc-landing-frame"
+      src="/app/static/landing_page.html"
+      style="width:100%; height:100vh; border:none; display:block;"
+      scrolling="no"
+    ></iframe>
     """, unsafe_allow_html=True)
 
 
