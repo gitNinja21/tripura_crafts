@@ -1,13 +1,6 @@
 # app.py — Tripura Craftsmen
-# Run from the ecom_startup folder:
-#   cd ecom_startup
-#   python -m streamlit run tripura_crafts/app.py
-
 import os
-import re
-import base64
 import streamlit as st
-import streamlit.components.v1 as components
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -18,8 +11,7 @@ st.set_page_config(
 )
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-_DIR  = os.path.dirname(os.path.abspath(__file__))   # same folder as app.py
-HTML_PATH = os.path.join(_DIR, "tripuracraftsmen_showcase.html")
+_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ── Session state ─────────────────────────────────────────────────────────────
 def _ss(k, v):
@@ -28,9 +20,9 @@ def _ss(k, v):
 
 _ss("page", "home")
 _ss("cart", {})
-_ss("womens_collection", None)   # which collection card was clicked
+_ss("womens_collection", None)
 
-# ── Query param routing (from HTML landing page) ──────────────────────────────
+# ── Query param routing ────────────────────────────────────────────────────────
 _NAV_MAP = {
     "womens_wear": "womens_wear",
     "mens_wear":   "mens_wear",
@@ -47,46 +39,22 @@ if _nav in _NAV_MAP and st.session_state.page == "home":
     st.query_params.clear()
     st.rerun()
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Navigation helper ──────────────────────────────────────────────────────────
 def nav_to(page):
     st.session_state.page = page
     st.rerun()
 
-def _inline_images(html, base_dir):
-    """Replace relative image src= with base64 data URIs so they load inside the iframe."""
-    mime_map = {
-        "jpg":  "image/jpeg", "jpeg": "image/jpeg",
-        "png":  "image/png",  "webp": "image/webp",
-        "avif": "image/avif", "gif":  "image/gif",
-    }
-    def _replace(m):
-        src = m.group(1)
-        # Leave absolute URLs and data URIs untouched
-        if src.startswith(("http", "data:", "//", "mailto:")):
-            return m.group(0)
-        path = os.path.join(base_dir, src)
-        if not os.path.exists(path):
-            return m.group(0)
-        ext  = src.rsplit(".", 1)[-1].lower()
-        mime = mime_map.get(ext, "image/jpeg")
-        with open(path, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode()
-        return f'src="data:{mime};base64,{b64}"'
-    return re.sub(r'src="([^"]+)"', _replace, html)
-
-# ── CSS helpers ───────────────────────────────────────────────────────────────
-# Strip ALL Streamlit chrome for the home page (full-bleed HTML experience)
+# ── CSS — hides Streamlit chrome on home page ──────────────────────────────────
 _HOME_CSS = """
 <style>
   #MainMenu, header, footer { display: none !important; }
   .block-container { padding: 0 !important; max-width: 100% !important; }
   section[data-testid="stSidebar"] { display: none !important; }
   [data-testid="stAppViewContainer"] { padding: 0 !important; }
-  iframe { border: none !important; display: block !important; }
 </style>
 """
 
-# Minimal chrome for inner pages
+# ── CSS — minimal chrome for inner pages ──────────────────────────────────────
 _PAGE_CSS = """
 <style>
   #MainMenu, header, footer { display: none !important; }
@@ -95,10 +63,7 @@ _PAGE_CSS = """
 </style>
 """
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  HOME — serves the HTML file as a full-bleed experience
-# ═══════════════════════════════════════════════════════════════════════════════
+# ── Home page CSS ─────────────────────────────────────────────────────────────
 _HOME_PAGE_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@300;400;600&display=swap');
@@ -106,12 +71,9 @@ _HOME_PAGE_CSS = """
 body, [data-testid="stAppViewContainer"] {
     background: #1A0A00 !important;
 }
-.block-container {
-    padding: 0 !important;
-    max-width: 100% !important;
-}
+.block-container { padding: 0 !important; max-width: 100% !important; }
 
-/* ── Hero ── */
+/* Hero */
 .home-hero {
     background: linear-gradient(160deg, #1A0A00 0%, #3d1500 50%, #1A0A00 100%);
     text-align: center;
@@ -149,7 +111,7 @@ body, [data-testid="stAppViewContainer"] {
     margin: 0 auto;
 }
 
-/* ── Section label ── */
+/* Section headings */
 .section-label {
     font-family: 'Cinzel', serif;
     font-size: 0.6rem;
@@ -157,71 +119,73 @@ body, [data-testid="stAppViewContainer"] {
     color: #C8972A;
     text-transform: uppercase;
     text-align: center;
-    margin-bottom: 10px;
+    margin: 40px 0 10px;
 }
 .section-title {
     font-family: 'Playfair Display', serif;
     font-size: clamp(1.6rem, 3vw, 2.4rem);
     color: #FAF3E8;
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 32px;
 }
 
-/* ── Collection cards ── */
+/* Cards */
 .home-card {
     border-radius: 8px;
     overflow: hidden;
     background: #2a1200;
     border: 1px solid rgba(200,151,42,0.15);
     transition: transform 0.3s ease, border-color 0.3s ease;
-    cursor: pointer;
+    margin-bottom: 12px;
 }
 .home-card:hover {
     transform: translateY(-6px);
     border-color: rgba(200,151,42,0.5);
 }
-.home-card-img {
+.home-card img {
     width: 100%;
     aspect-ratio: 3/4;
     object-fit: cover;
     display: block;
 }
-.home-card-img-placeholder {
+.home-card-placeholder {
     width: 100%;
     aspect-ratio: 3/4;
     background: linear-gradient(160deg, #2a1200 0%, #4a2000 100%);
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.home-card-body { padding: 20px; }
+.home-card-body { padding: 16px; }
 .home-card-label {
     font-family: 'Cinzel', serif;
-    font-size: 0.55rem;
-    letter-spacing: 0.3em;
+    font-size: 0.52rem;
+    letter-spacing: 0.28em;
     color: #C8972A;
     text-transform: uppercase;
     margin-bottom: 6px;
 }
 .home-card-name {
     font-family: 'Playfair Display', serif;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     color: #FAF3E8;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 .home-card-desc {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: rgba(250,243,232,0.5);
     line-height: 1.6;
 }
 
-/* ── Explore button ── */
+/* Explore buttons */
 .stButton > button {
     background: transparent !important;
     border: 1px solid #C8972A !important;
     color: #C8972A !important;
     font-family: 'Cinzel', serif !important;
-    font-size: 0.65rem !important;
-    letter-spacing: 0.25em !important;
+    font-size: 0.63rem !important;
+    letter-spacing: 0.22em !important;
     padding: 10px 24px !important;
     border-radius: 2px !important;
     width: 100% !important;
@@ -232,12 +196,12 @@ body, [data-testid="stAppViewContainer"] {
     color: #1A0A00 !important;
 }
 
-/* ── Footer ── */
+/* Footer */
 .home-footer {
     text-align: center;
     padding: 40px 20px 30px;
     border-top: 1px solid rgba(200,151,42,0.15);
-    margin-top: 60px;
+    margin-top: 48px;
 }
 .home-footer-brand {
     font-family: 'Playfair Display', serif;
@@ -247,18 +211,21 @@ body, [data-testid="stAppViewContainer"] {
 }
 .home-footer-tag {
     font-family: 'Cinzel', serif;
-    font-size: 0.55rem;
-    letter-spacing: 0.3em;
+    font-size: 0.52rem;
+    letter-spacing: 0.28em;
     color: rgba(250,243,232,0.3);
 }
 </style>
 """
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  HOME PAGE
+# ═══════════════════════════════════════════════════════════════════════════════
 def render_home():
     st.markdown(_HOME_CSS, unsafe_allow_html=True)
     st.markdown(_HOME_PAGE_CSS, unsafe_allow_html=True)
 
-    # ── Hero ──────────────────────────────────────────────────────────────────
+    # Hero
     st.markdown("""
     <div class="home-hero">
         <div class="home-eyebrow">✦ &nbsp; Handcrafted in Tripura, Northeast India &nbsp; ✦</div>
@@ -271,11 +238,11 @@ def render_home():
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Collections ───────────────────────────────────────────────────────────
-    st.markdown("<br/>", unsafe_allow_html=True)
+    # Section header
     st.markdown('<div class="section-label">OUR COLLECTIONS</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Discover the Heritage</div>', unsafe_allow_html=True)
 
+    # 4 collection cards
     CARDS = [
         {
             "label": "WOMEN'S HERITAGE · RISA COLLECTION",
@@ -310,24 +277,24 @@ def render_home():
     cols = st.columns(4, gap="medium")
     for col, card in zip(cols, CARDS):
         with col:
-            img_path = os.path.join(_DIR, "static", card["img"])
-            if os.path.exists(img_path):
-                st.image(img_path, use_container_width=True)
-            else:
-                st.markdown('<div class="home-card-img-placeholder"></div>', unsafe_allow_html=True)
-
+            # Use static file server URL — reliable on Railway
+            img_url = f"/app/static/{card['img']}"
             st.markdown(f"""
-            <div style="padding: 14px 0 10px;">
-                <div class="home-card-label">{card['label']}</div>
-                <div class="home-card-name">{card['name']}</div>
-                <div class="home-card-desc">{card['desc']}</div>
+            <div class="home-card">
+                <img src="{img_url}" alt="{card['name']}"
+                     onerror="this.parentElement.innerHTML='<div class=home-card-placeholder></div>'"/>
+                <div class="home-card-body">
+                    <div class="home-card-label">{card['label']}</div>
+                    <div class="home-card-name">{card['name']}</div>
+                    <div class="home-card-desc">{card['desc']}</div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
 
             if st.button(f"Explore {card['name']} →", key=f"home_{card['nav']}"):
                 nav_to(card["nav"])
 
-    # ── Footer ────────────────────────────────────────────────────────────────
+    # Footer
     st.markdown("""
     <div class="home-footer">
         <div class="home-footer-brand">Tripura Craftsmen</div>
@@ -337,10 +304,9 @@ def render_home():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#  PLACEHOLDER PAGES  (content added step by step)
+#  PLACEHOLDER FOR COMING-SOON PAGES
 # ═══════════════════════════════════════════════════════════════════════════════
 def _placeholder(title, icon, tagline):
-    """Renders a clean coming-soon placeholder page."""
     st.markdown(_PAGE_CSS, unsafe_allow_html=True)
     st.markdown(f"""
     <div style="text-align:center; padding: 80px 20px 48px;">
@@ -360,7 +326,9 @@ def _placeholder(title, icon, tagline):
             nav_to("home")
 
 
-# ── Shared Women's Wear data & CSS ───────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+#  WOMEN'S WEAR — 6 collection cards
+# ═══════════════════════════════════════════════════════════════════════════════
 COLLECTIONS = [
     {
         "key":     "risa_royale",
@@ -442,26 +410,13 @@ _WW_CSS = """
     line-height: 1.7;
 }
 
-/* ── 6 collection cards grid ── */
-.coll-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    padding: 40px 0 56px;
-}
-@media (max-width: 900px) { .coll-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { .coll-grid { grid-template-columns: 1fr 1fr; gap: 14px; padding: 24px 0 40px; } }
-
 .coll-card {
     border-radius: 10px;
     overflow: hidden;
     background: #fff;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 8px;
 }
-.coll-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.14); }
-
 .coll-img {
     width: 100%;
     aspect-ratio: 3/4;
@@ -471,7 +426,6 @@ _WW_CSS = """
     align-items: center;
     justify-content: center;
     gap: 8px;
-    position: relative;
 }
 .coll-img-label {
     font-family: 'Cinzel', serif;
@@ -480,10 +434,7 @@ _WW_CSS = """
     color: rgba(26,10,0,0.3);
     text-transform: uppercase;
 }
-.coll-info {
-    padding: 16px 16px 20px;
-    background: #fff;
-}
+.coll-info { padding: 16px 16px 20px; background: #fff; }
 .coll-tribe {
     font-family: 'Cinzel', serif;
     font-size: 0.55rem;
@@ -504,50 +455,6 @@ _WW_CSS = """
     font-size: 0.85rem;
     color: #888;
     line-height: 1.5;
-}
-
-/* ── Product grid (collection page) ── */
-.prod-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    padding: 32px 0 48px;
-}
-@media (max-width: 768px) { .prod-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
-
-.prod-card {
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-}
-.prod-img-placeholder {
-    width: 100%;
-    aspect-ratio: 3/4;
-    background: linear-gradient(160deg, #e8ddd0 0%, #d4c4b0 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.prod-img-placeholder span {
-    font-family: 'Cinzel', serif;
-    font-size: 0.5rem;
-    letter-spacing: 0.2em;
-    color: rgba(26,10,0,0.28);
-    text-transform: uppercase;
-}
-.prod-info { padding: 14px 14px 18px; }
-.prod-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 0.95rem;
-    color: #1A0A00;
-    margin-bottom: 5px;
-}
-.prod-price {
-    font-family: 'Cinzel', serif;
-    font-size: 0.72rem;
-    color: #C8972A;
-    letter-spacing: 0.1em;
 }
 
 /* collection detail header */
@@ -578,14 +485,41 @@ _WW_CSS = """
     font-size: 1rem;
     color: rgba(250,243,232,0.5);
 }
+
+/* product grid */
+.prod-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 32px 0 48px;
+}
+@media (max-width: 768px) { .prod-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
+
+.prod-card { border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+.prod-img-placeholder {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: linear-gradient(160deg, #e8ddd0 0%, #d4c4b0 100%);
+    display: flex; align-items: center; justify-content: center;
+}
+.prod-img-placeholder span {
+    font-family: 'Cinzel', serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    color: rgba(26,10,0,0.28);
+    text-transform: uppercase;
+}
+.prod-info { padding: 14px 14px 18px; }
+.prod-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: #1A0A00; margin-bottom: 5px; }
+.prod-price { font-family: 'Cinzel', serif; font-size: 0.72rem; color: #C8972A; letter-spacing: 0.1em; }
 </style>
 """
+
 
 def render_womens_wear():
     st.markdown(_PAGE_CSS, unsafe_allow_html=True)
     st.markdown(_WW_CSS, unsafe_allow_html=True)
 
-    # ── Header ────────────────────────────────────────────────────────────────
     st.markdown("""
     <div class="ww-header">
         <div class="ww-eyebrow">✦ &nbsp; Indigenous Handloom &nbsp; ✦</div>
@@ -597,13 +531,12 @@ def render_womens_wear():
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Back button ───────────────────────────────────────────────────────────
     st.markdown("<br/>", unsafe_allow_html=True)
     if st.button("← Back to Home", key="ww_back"):
         nav_to("home")
     st.markdown("<br/>", unsafe_allow_html=True)
 
-    # ── 6 collection cards — 2 per row using Streamlit columns ───────────────
+    # 6 collection cards in 2 rows of 3
     rows = [COLLECTIONS[i:i+3] for i in range(0, len(COLLECTIONS), 3)]
     for row in rows:
         cols = st.columns(len(row), gap="medium")
@@ -621,12 +554,12 @@ def render_womens_wear():
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                if st.button(f"Explore →", key=f"coll_{c['key']}"):
+                if st.button("Explore →", key=f"coll_{c['key']}"):
                     st.session_state.womens_collection = c["key"]
                     nav_to("womens_collection")
 
+
 def render_womens_collection():
-    """Individual collection page — shown when a card is clicked."""
     key = st.session_state.get("womens_collection")
     c   = COLLECTION_MAP.get(key)
     if not c:
@@ -636,7 +569,6 @@ def render_womens_collection():
     st.markdown(_PAGE_CSS, unsafe_allow_html=True)
     st.markdown(_WW_CSS,   unsafe_allow_html=True)
 
-    # Dark hero header
     st.markdown(f"""
     <div class="col-hero">
         <div class="col-hero-tribe">{c['tribe']}</div>
@@ -651,7 +583,6 @@ def render_womens_collection():
         if st.button("← Back", key="col_back"):
             nav_to("womens_wear")
 
-    # Product placeholder grid
     cards_html = '<div class="prod-grid">'
     for item in c["items"]:
         cards_html += f"""
@@ -666,25 +597,20 @@ def render_womens_collection():
     st.markdown(cards_html, unsafe_allow_html=True)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  OTHER PAGES
+# ═══════════════════════════════════════════════════════════════════════════════
 def render_mens_wear():
-    _placeholder(
-        "Men's Wear", "🧥",
-        "Kubai tops, Rignai Dhoti bottoms — traditional Tripuri masculinity, coming soon."
-    )
-
+    _placeholder("Men's Wear", "🧥",
+        "Kubai tops, Rignai Dhoti bottoms — traditional Tripuri masculinity, coming soon.")
 
 def render_jewellery():
-    _placeholder(
-        "Tribal Jewellery", "💎",
-        "Hand-hammered silver torques, coin necklaces and earrings — coming soon."
-    )
-
+    _placeholder("Tribal Jewellery", "💎",
+        "Hand-hammered silver torques, coin necklaces and earrings — coming soon.")
 
 def render_home_decor():
-    _placeholder(
-        "Home Décor", "🏡",
-        "Bamboo lamps, baskets, furniture and gift sets — handcrafted, coming soon."
-    )
+    _placeholder("Home Décor", "🏡",
+        "Bamboo lamps, baskets, furniture and gift sets — handcrafted, coming soon.")
 
 
 def render_contact():
@@ -779,10 +705,8 @@ def render_help():
 
 
 def render_track_order():
-    _placeholder(
-        "Track Your Order", "📦",
-        "Enter your email address to see all your past orders — coming soon."
-    )
+    _placeholder("Track Your Order", "📦",
+        "Enter your email address to see all your past orders — coming soon.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
