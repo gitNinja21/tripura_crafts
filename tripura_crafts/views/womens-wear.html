@@ -42,6 +42,8 @@
     .coll-card{border-radius:8px;overflow:hidden;background:#1e0d00;border:1px solid rgba(200,151,42,0.12);transition:transform 0.4s,border-color 0.4s;cursor:pointer;}
     .coll-card:hover{transform:translateY(-8px);border-color:rgba(200,151,42,0.45);}
     .coll-img{width:100%;aspect-ratio:3/4;background:linear-gradient(160deg,#2a1200 0%,#4a2000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;}
+    .coll-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform 0.5s ease;}
+    .coll-card:hover .coll-img img{transform:scale(1.05);}
     .coll-img-icon{font-size:3rem;opacity:0.4;}
     .coll-img-label{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.25em;color:rgba(200,151,42,0.5);text-transform:uppercase;}
     .coll-info{padding:20px 20px 24px;}
@@ -83,7 +85,7 @@
 
     <!-- Risa Royale -->
     <div class="coll-card reveal">
-      <div class="coll-img"><span class="coll-img-icon">🧵</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-img"><img src="/static/risa.jpg" alt="Risa Royale — Tripuri Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Tripuri Collection</div>
         <div class="coll-name">Risa Royale</div>
@@ -94,7 +96,7 @@
 
     <!-- Stripe & Soul -->
     <div class="coll-card reveal" style="transition-delay:0.08s">
-      <div class="coll-img"><span class="coll-img-icon">🎨</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-img"><img src="/static/reang.jpg" alt="Stripe &amp; Soul — Reang Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Reang Collection</div>
         <div class="coll-name">Stripe &amp; Soul</div>
@@ -105,7 +107,7 @@
 
     <!-- Pinon Poetry -->
     <div class="coll-card reveal" style="transition-delay:0.16s">
-      <div class="coll-img"><span class="coll-img-icon">🌿</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-img"><img src="/static/pinon.jpg" alt="Pinon Poetry — Chakma Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Chakma Collection</div>
         <div class="coll-name">Pinon Poetry</div>
@@ -116,7 +118,7 @@
 
     <!-- Waichum Whispers -->
     <div class="coll-card reveal" style="transition-delay:0.24s">
-      <div class="coll-img"><span class="coll-img-icon">🌸</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-img"><img src="/static/jamatia.jpg" alt="Waichum Whispers — Jamatia Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Jamatia Collection</div>
         <div class="coll-name">Waichum Whispers</div>
@@ -127,7 +129,7 @@
 
     <!-- Sacred Threads -->
     <div class="coll-card reveal" style="transition-delay:0.32s">
-      <div class="coll-img"><span class="coll-img-icon">🪷</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-img"><img src="/static/mog.jpg" alt="Sacred Threads — Mog Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Mog Collection</div>
         <div class="coll-name">Sacred Threads</div>
