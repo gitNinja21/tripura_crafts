@@ -1,5 +1,6 @@
 # app.py — Tripura Craftsmen
 import os
+import re
 import streamlit as st
 
 # ── Page config ───────────────────────────────────────────────────────────────
@@ -214,32 +215,68 @@ _HOME_PAGE_CSS_UNUSED = """
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HOME PAGE
-#  Strategy: serve landing_page.html from Streamlit's static file server and
-#  embed it via a plain <iframe> injected with st.markdown.  Unlike the iframe
-#  created by st.components.v1.html(), this one has NO sandbox attribute, so
-#  window.top.location.href navigation works perfectly.
+#  Strategy: read the HTML file in Python, process it (fix nav links, image
+#  paths, remove JS), then inject CSS + body separately via st.markdown.
+#  Navigation uses plain <a href="/?nav=xxx"> links — no JS needed.
+#  The query-param router at the top of this file handles the routing.
 # ═══════════════════════════════════════════════════════════════════════════════
+@st.cache_data(show_spinner=False)
+def _get_home_html():
+    html_path = os.path.join(_DIR, "tripuracraftsmen_showcase.html")
+    with open(html_path, "r", encoding="utf-8") as f:
+        raw = f.read()
+
+    # ── Extract and merge all <style> blocks ──────────────────────────────────
+    styles = re.findall(r"<style[^>]*>(.*?)</style>", raw, re.DOTALL)
+    extra_css = """
+    /* Make scroll-reveal elements visible (IntersectionObserver won't run) */
+    .reveal { opacity: 1 !important; transform: none !important;
+              animation: fadeUp 0.7s ease both !important; }
+    /* Show all FAQ answers (toggleFaq JS won't run) */
+    .faq-answer { max-height: 600px !important; padding-top: 14px !important;
+                  overflow: visible !important; }
+    .faq-arrow { display: none !important; }
+    .faq-item  { cursor: default !important; }
+    """
+    css = "<style>" + "\n".join(styles) + extra_css + "</style>"
+
+    # ── Extract <body> content ────────────────────────────────────────────────
+    m = re.search(r"<body[^>]*>(.*?)</body>", raw, re.DOTALL)
+    body = m.group(1) if m else raw
+
+    # Remove <script> blocks (they don't execute inside st.markdown anyway)
+    body = re.sub(r"<script[^>]*>.*?</script>", "", body, flags=re.DOTALL)
+
+    # Convert  onclick="navigateTo('page')"  →  href="/?nav=page"
+    body = re.sub(r'onclick="navigateTo\(\'(\w+)\'\)"', r'href="/?nav=\1"', body)
+
+    # Remove FAQ onclick (answers are always-visible via CSS override above)
+    body = body.replace(' onclick="toggleFaq(this)"', "")
+
+    # Fix image paths → Streamlit static file server
+    for img in ["women_wear.jpg", "men_wear.jpg", "jewellery.jpg",
+                "home_decor.jpg", "sacred_silver.jpg"]:
+        body = body.replace(f'src="{img}"', f'src="/app/static/{img}"')
+
+    # CRITICAL: collapse multiple blank lines so Python-markdown doesn't break
+    # HTML blocks at blank-line boundaries
+    body = re.sub(r"\n{2,}", "\n", body)
+
+    return css, body
+
+
 def render_home():
-    # Hide all Streamlit chrome so the HTML page is full-bleed
-    st.markdown("""
-    <style>
+    # Hide all Streamlit chrome for a full-bleed experience
+    st.markdown("""<style>
       #MainMenu, header, footer { display: none !important; }
       .block-container { padding: 0 !important; max-width: 100% !important; }
       section[data-testid="stSidebar"] { display: none !important; }
       [data-testid="stAppViewContainer"] { padding: 0 !important; }
-      body { overflow-x: hidden; }
-    </style>
-    """, unsafe_allow_html=True)
+    </style>""", unsafe_allow_html=True)
 
-    # Unsandboxed iframe — full HTML experience with working navigation
-    st.markdown("""
-    <iframe
-      id="tc-landing-frame"
-      src="/app/static/landing_page.html"
-      style="width:100%; height:100vh; border:none; display:block;"
-      scrolling="no"
-    ></iframe>
-    """, unsafe_allow_html=True)
+    css, body = _get_home_html()
+    st.markdown(css,  unsafe_allow_html=True)   # inject all page CSS
+    st.markdown(body, unsafe_allow_html=True)   # inject page body HTML
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
