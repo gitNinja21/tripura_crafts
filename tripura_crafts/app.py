@@ -64,11 +64,8 @@ _PAGE_CSS = """
 </style>
 """
 
-# ── Home page CSS (kept for reference — now unused since HTML is served as static file) ──
-_HOME_PAGE_CSS_UNUSED = """
-<style>
-/* This block is no longer used — the HTML landing page is served at
-   /app/static/landing_page.html and embedded via an unsandboxed iframe. */
+# ── (Unused CSS block removed) ───────────────────────────────────────────────
+_UNUSED = """
 .home-hero {
     background: linear-gradient(160deg, #1A0A00 0%, #3d1500 50%, #1A0A00 100%);
     text-align: center;
@@ -215,58 +212,52 @@ _HOME_PAGE_CSS_UNUSED = """
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HOME PAGE
-#  Strategy: read the HTML file in Python, process it (fix nav links, image
-#  paths, remove JS), then inject CSS + body separately via st.markdown.
-#  Navigation uses plain <a href="/?nav=xxx"> links — no JS needed.
-#  The query-param router at the top of this file handles the routing.
+#  Strategy: render the full HTML file via st.components.v1.html() — this gives
+#  a pixel-perfect render with all CSS, JS, hover effects and animations intact.
+#
+#  Navigation problem: Streamlit's html() wraps content in a sandboxed iframe
+#  that blocks window.top.location.href. Fix: inject a tiny invisible sibling
+#  component that uses allow-same-origin to add allow-top-navigation to the main
+#  iframe's sandbox attribute. The spec says sandbox changes take effect
+#  immediately, so the next click navigates the top frame correctly.
 # ═══════════════════════════════════════════════════════════════════════════════
+
+# Tiny invisible component — unlocks top-frame navigation for sibling iframes
+_SANDBOX_UNLOCKER = """<script>
+function unlock() {
+  try {
+    var me = window.frameElement;
+    window.parent.document.querySelectorAll('iframe').forEach(function(f) {
+      if (f === me) return;
+      var sb = f.getAttribute('sandbox') || '';
+      if (sb && sb.indexOf('allow-top-navigation') === -1)
+        f.setAttribute('sandbox', sb + ' allow-top-navigation');
+    });
+  } catch(e) {}
+}
+[0, 150, 400, 900, 2000].forEach(function(t){ setTimeout(unlock, t); });
+try {
+  var obs = new MutationObserver(unlock);
+  obs.observe(window.parent.document.body, {childList:true, subtree:true});
+  setTimeout(function(){ obs.disconnect(); }, 5000);
+} catch(e) {}
+</script>"""
+
+
 @st.cache_data(show_spinner=False)
-def _get_home_html():
-    html_path = os.path.join(_DIR, "tripuracraftsmen_showcase.html")
-    with open(html_path, "r", encoding="utf-8") as f:
-        raw = f.read()
-
-    # ── Extract and merge all <style> blocks ──────────────────────────────────
-    styles = re.findall(r"<style[^>]*>(.*?)</style>", raw, re.DOTALL)
-    extra_css = """
-    /* Make scroll-reveal elements visible (IntersectionObserver won't run) */
-    .reveal { opacity: 1 !important; transform: none !important;
-              animation: fadeUp 0.7s ease both !important; }
-    /* Show all FAQ answers (toggleFaq JS won't run) */
-    .faq-answer { max-height: 600px !important; padding-top: 14px !important;
-                  overflow: visible !important; }
-    .faq-arrow { display: none !important; }
-    .faq-item  { cursor: default !important; }
-    """
-    css = "<style>" + "\n".join(styles) + extra_css + "</style>"
-
-    # ── Extract <body> content ────────────────────────────────────────────────
-    m = re.search(r"<body[^>]*>(.*?)</body>", raw, re.DOTALL)
-    body = m.group(1) if m else raw
-
-    # Remove <script> blocks (they don't execute inside st.markdown anyway)
-    body = re.sub(r"<script[^>]*>.*?</script>", "", body, flags=re.DOTALL)
-
-    # Convert  onclick="navigateTo('page')"  →  href="/?nav=page"
-    body = re.sub(r'onclick="navigateTo\(\'(\w+)\'\)"', r'href="/?nav=\1"', body)
-
-    # Remove FAQ onclick (answers are always-visible via CSS override above)
-    body = body.replace(' onclick="toggleFaq(this)"', "")
-
-    # Fix image paths → Streamlit static file server
+def _load_home_html():
+    """Read the HTML landing page and fix image paths for the static server."""
+    path = os.path.join(_DIR, "tripuracraftsmen_showcase.html")
+    with open(path, "r", encoding="utf-8") as f:
+        html = f.read()
     for img in ["women_wear.jpg", "men_wear.jpg", "jewellery.jpg",
                 "home_decor.jpg", "sacred_silver.jpg"]:
-        body = body.replace(f'src="{img}"', f'src="/app/static/{img}"')
-
-    # CRITICAL: collapse multiple blank lines so Python-markdown doesn't break
-    # HTML blocks at blank-line boundaries
-    body = re.sub(r"\n{2,}", "\n", body)
-
-    return css, body
+        html = html.replace(f'src="{img}"', f'src="/app/static/{img}"')
+    return html
 
 
 def render_home():
-    # Hide all Streamlit chrome for a full-bleed experience
+    # Hide Streamlit chrome so the HTML page is full-bleed
     st.markdown("""<style>
       #MainMenu, header, footer { display: none !important; }
       .block-container { padding: 0 !important; max-width: 100% !important; }
@@ -274,9 +265,11 @@ def render_home():
       [data-testid="stAppViewContainer"] { padding: 0 !important; }
     </style>""", unsafe_allow_html=True)
 
-    css, body = _get_home_html()
-    st.markdown(css,  unsafe_allow_html=True)   # inject all page CSS
-    st.markdown(body, unsafe_allow_html=True)   # inject page body HTML
+    # 1. Invisible sandbox unlocker — runs first, patches sibling iframes
+    st.components.v1.html(_SANDBOX_UNLOCKER, height=0)
+
+    # 2. The actual HTML landing page — pixel-perfect render
+    st.components.v1.html(_load_home_html(), height=6000, scrolling=False)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
