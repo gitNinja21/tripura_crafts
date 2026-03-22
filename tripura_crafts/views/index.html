@@ -594,6 +594,135 @@
       opacity: 1;
     }
 
+    /* ── FOUNDER SECTION ──────────────────────────── */
+    .founder-section {
+      padding: 90px 20px;
+      background: linear-gradient(135deg, #0d0500 0%, #1f0c00 50%, #0d0500 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .founder-section::before {
+      content: '"';
+      position: absolute;
+      font-family: 'Playfair Display', serif;
+      font-size: 30rem;
+      color: rgba(200,151,42,0.03);
+      top: -60px;
+      left: -20px;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .founder-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    @media (max-width: 800px) {
+      .founder-inner { grid-template-columns: 1fr; gap: 48px; }
+    }
+
+    .founder-avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #a07020);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 2.2rem;
+      color: var(--deep);
+      font-weight: 700;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(200,151,42,0.35);
+    }
+
+    .founder-badge-row { margin-bottom: 10px; }
+
+    .founder-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .founder-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--cream);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .founder-role {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      color: rgba(250,243,232,0.4);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .founder-divider {
+      width: 50px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+      margin-bottom: 20px;
+    }
+
+    .founder-bio {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      line-height: 1.9;
+      color: rgba(250,243,232,0.65);
+      font-style: italic;
+    }
+
+    .vision-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.4em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .vision-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      color: var(--cream);
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 28px;
+    }
+
+    .vision-body {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      line-height: 1.9;
+      color: rgba(250,243,232,0.7);
+      margin-bottom: 20px;
+    }
+
+    .vision-quote {
+      margin-top: 32px;
+      padding: 20px 28px;
+      border-left: 2px solid var(--gold);
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-style: italic;
+      color: rgba(250,243,232,0.55);
+      background: rgba(200,151,42,0.04);
+      border-radius: 0 4px 4px 0;
+    }
+
     /* Tribal pattern bar */
     .tribal-bar {
       height: 6px;
@@ -774,6 +903,52 @@
           Tripura's hills, preserving their livelihood and cultural identity.
         </p>
       </div>
+    </div>
+  </section>
+
+  <!-- TRIBAL BAR -->
+  <div class="tribal-bar"></div>
+
+  <!-- FOUNDER SECTION -->
+  <section class="founder-section">
+    <div class="founder-inner">
+
+      <div class="founder-left reveal">
+        <div class="founder-avatar">A</div>
+        <div class="founder-badge-row">
+          <span class="founder-badge">✦ FOUNDER</span>
+        </div>
+        <h3 class="founder-name">Arghya</h3>
+        <p class="founder-role">Founder &amp; Curator, Mwktai</p>
+        <div class="founder-divider"></div>
+        <p class="founder-bio">
+          Born and raised in the hills of Tripura, I grew up watching my grandmother weave
+          the Risa by hand — a ritual of patience, memory and love. I started Mwktai
+          because I saw that craft dying quietly while the world moved on. Every artisan
+          family behind this brand deserves to thrive, not just survive. This isn't
+          a store. It's a lifeline.
+        </p>
+      </div>
+
+      <div class="founder-right reveal" style="transition-delay:0.2s">
+        <p class="vision-label">✦ &nbsp; THE VISION &nbsp; ✦</p>
+        <h2 class="vision-title">We don't just sell cloth.<br/>We sell memory.</h2>
+        <p class="vision-body">
+          Tripura's weavers have spent a thousand years perfecting the language of thread —
+          colours that tell tribal stories, patterns that encode festivals, silver that marks
+          rites of passage. Mwktai exists so that language is never forgotten.
+        </p>
+        <p class="vision-body">
+          Our mission is simple and non-negotiable: every artisan gets a fair price,
+          every tradition gets a future, and every customer gets something genuinely
+          irreplaceable — not a product manufactured in a factory, but a piece of
+          someone's heritage, made by hand, with intent.
+        </p>
+        <div class="vision-quote">
+          "The loom does not forget what the world forgets."
+        </div>
+      </div>
+
     </div>
   </section>
 
