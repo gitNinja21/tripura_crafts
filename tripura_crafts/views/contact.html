@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact Us — Tripura Craftsmen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--gold:#C8972A;--deep:#1A0A00;--cream:#FAF3E8;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Cormorant Garamond',serif;background:var(--deep);color:var(--cream);overflow-x:hidden;}
+    .tribal-bar{height:6px;background:repeating-linear-gradient(90deg,#8B1A1A 0,#8B1A1A 12px,#C8972A 12px,#C8972A 24px,#1A0A00 24px,#1A0A00 36px,#C8972A 36px,#C8972A 48px);}
+    .top-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:rgba(26,10,0,0.97);border-bottom:1px solid rgba(200,151,42,0.15);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+    .back-link{font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.2em;color:rgba(250,243,232,0.6);text-decoration:none;transition:color 0.3s;}.back-link:hover{color:var(--gold);}
+    .brand-small{font-family:'Playfair Display',serif;font-size:1.25rem;background:linear-gradient(135deg,#FAF3E8 20%,var(--gold) 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;}
+    .nav-links{display:flex;gap:28px;}
+    .nav-links a{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.25em;color:rgba(250,243,232,0.4);text-decoration:none;transition:color 0.3s;}
+    .nav-links a:hover,.nav-links a.active{color:var(--gold);}
+    @media(max-width:640px){.top-nav{padding:14px 20px;}.nav-links{display:none;}}
+    .page-hero{padding:60px 20px 50px;text-align:center;background:radial-gradient(ellipse at 50% 0%,#3d1a00 0%,#1A0A00 70%);border-bottom:1px solid rgba(200,151,42,0.2);}
+    .page-eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.4em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+    .page-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.4rem);font-weight:700;color:var(--cream);margin-bottom:14px;}
+    .page-subtitle{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(250,243,232,0.55);max-width:480px;margin:0 auto;line-height:1.8;}
+    .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;max-width:1000px;margin:0 auto;padding:64px 40px;}
+    @media(max-width:700px){.contact-grid{grid-template-columns:1fr;gap:32px;padding:40px 24px;}}
+    .contact-card{background:rgba(255,255,255,0.03);border:1px solid rgba(200,151,42,0.12);border-radius:8px;padding:32px;margin-bottom:24px;transition:border-color 0.3s;}
+    .contact-card:hover{border-color:rgba(200,151,42,0.35);}
+    .card-icon{font-size:2rem;margin-bottom:14px;}
+    .card-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+    .card-value{font-size:1.05rem;color:rgba(250,243,232,0.85);line-height:1.6;margin-bottom:14px;}
+    .card-note{font-size:0.85rem;color:rgba(250,243,232,0.4);line-height:1.5;}
+    .action-btn{display:inline-block;padding:10px 28px;border:1px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.22em;text-decoration:none;border-radius:2px;transition:all 0.3s;margin-top:12px;}
+    .action-btn:hover{background:var(--gold);color:var(--deep);}
+    footer{padding:44px 20px 28px;text-align:center;border-top:1px solid rgba(200,151,42,0.15);}
+    .footer-brand{font-family:'Playfair Display',serif;font-size:1.4rem;background:linear-gradient(135deg,#FAF3E8 20%,var(--gold) 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+    .footer-nav{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:14px 0 10px;}
+    .footer-nav a{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.22em;color:rgba(250,243,232,0.3);text-decoration:none;transition:color 0.3s;}
+    .footer-nav a:hover{color:var(--gold);}
+    .footer-copy{font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(250,243,232,0.18);letter-spacing:0.2em;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+  </style>
+</head>
+<body>
+
+<div class="tribal-bar"></div>
+<nav class="top-nav">
+  <a href="/" class="back-link">← HOME</a>
+  <a href="/" class="brand-small">Tripura Craftsmen</a>
+  <div class="nav-links">
+    <a href="/womens-wear">Women's</a>
+    <a href="/mens-wear">Men's</a>
+    <a href="/jewellery">Jewellery</a>
+    <a href="/home-decor">Home Décor</a>
+    <a href="/contact" class="active">Contact</a>
+  </div>
+</nav>
+<div class="tribal-bar"></div>
+
+<header class="page-hero">
+  <p class="page-eyebrow">GET IN TOUCH</p>
+  <h1 class="page-title">Contact Us</h1>
+  <p class="page-subtitle">We're a small team in Tripura — your message will always reach a real person.</p>
+</header>
+
+<div class="tribal-bar"></div>
+
+<div class="contact-grid">
+  <div>
+    <div class="contact-card">
+      <div class="card-icon">📱</div>
+      <div class="card-label">WhatsApp / Phone</div>
+      <div class="card-value">+91 XXXXX XXXXX</div>
+      <div class="card-note">Mon – Sat, 10 AM – 6 PM IST</div>
+      <a href="https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20have%20a%20query%20about%20Tripura%20Craftsmen" target="_blank" class="action-btn">CHAT ON WHATSAPP</a>
+    </div>
+
+    <div class="contact-card">
+      <div class="card-icon">✉️</div>
+      <div class="card-label">Email</div>
+      <div class="card-value">hello@tripuracraftsmen.com</div>
+      <div class="card-note">We reply within 24 hours</div>
+      <a href="mailto:hello@tripuracraftsmen.com" class="action-btn">SEND EMAIL</a>
+    </div>
+  </div>
+
+  <div>
+    <div class="contact-card">
+      <div class="card-icon">📍</div>
+      <div class="card-label">Location</div>
+      <div class="card-value">Agartala, Tripura<br/>Northeast India — 799 001</div>
+    </div>
+
+    <div class="contact-card">
+      <div class="card-icon">🕐</div>
+      <div class="card-label">Working Hours</div>
+      <div class="card-value">Monday – Saturday<br/>10:00 AM – 6:00 PM IST</div>
+      <div class="card-note">Closed on Sundays and national holidays</div>
+    </div>
+
+    <div class="contact-card">
+      <div class="card-icon">📦</div>
+      <div class="card-label">Track Your Order</div>
+      <div class="card-value">Share your order ID via WhatsApp</div>
+      <div class="card-note">We'll update you within the hour</div>
+      <a href="/track-order" class="action-btn">TRACK ORDER</a>
+    </div>
+  </div>
+</div>
+
+<div class="tribal-bar"></div>
+<footer>
+  <div class="footer-brand">Tripura Craftsmen</div>
+  <div class="footer-nav">
+    <a href="/womens-wear">Women's Wear</a>
+    <a href="/mens-wear">Men's Wear</a>
+    <a href="/jewellery">Jewellery</a>
+    <a href="/home-decor">Home Décor</a>
+    <a href="/track-order">Track Order</a>
+    <a href="/contact">Contact</a>
+    <a href="/help">Help</a>
+  </div>
+  <p class="footer-copy">© 2025 TRIPURA CRAFTSMEN · ALL RIGHTS RESERVED</p>
+</footer>
+</body>
+</html>

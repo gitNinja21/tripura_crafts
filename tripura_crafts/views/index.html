@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tripura Craftsmen — Heritage Collection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --gold:    #C8972A;
+      --deep:    #1A0A00;
+      --crimson: #8B1A1A;
+      --cream:   #FAF3E8;
+      --silver:  #C0C0C0;
+      --accent:  #D4AF37;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Cormorant Garamond', serif;
+      background: var(--deep);
+      color: var(--cream);
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 60px 20px;
+      background: radial-gradient(ellipse at 50% 0%, #3d1a00 0%, #1A0A00 60%);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C8972A' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.35em;
+      color: var(--gold);
+      border: 1px solid rgba(200,151,42,0.4);
+      padding: 8px 24px;
+      border-radius: 40px;
+      margin-bottom: 30px;
+      animation: fadeUp 1s ease both;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 700;
+      line-height: 1;
+      text-align: center;
+      background: linear-gradient(135deg, #FAF3E8 20%, var(--gold) 60%, #FAF3E8 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeUp 1s ease 0.2s both;
+    }
+
+    .hero-sub {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(0.7rem, 2vw, 1rem);
+      letter-spacing: 0.4em;
+      color: var(--silver);
+      margin-top: 16px;
+      text-align: center;
+      animation: fadeUp 1s ease 0.4s both;
+    }
+
+    .hero-divider {
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 40px auto;
+      animation: fadeUp 1s ease 0.5s both;
+    }
+
+    /* ── MODELS GRID ──────────────────────────────────── */
+    .models-section {
+      padding: 80px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.4em;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 4vw, 3.2rem);
+      text-align: center;
+      margin-bottom: 16px;
+      color: var(--cream);
+    }
+
+    .section-desc {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: rgba(250,243,232,0.7);
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 60px;
+    }
+
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .models-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+      .models-grid { grid-template-columns: 1fr; }
+    }
+
+    .model-card {
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.5s cubic-bezier(.22,1,.36,1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    .model-card:hover {
+      transform: translateY(-10px) scale(1.01);
+    }
+
+    .model-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(200,151,42,0.0);
+      border-radius: 4px;
+      transition: border-color 0.4s;
+      pointer-events: none;
+    }
+
+    .model-card:hover::after {
+      border-color: rgba(200,151,42,0.6);
+    }
+
+    .card-img-wrap {
+      width: 100%;
+      aspect-ratio: 3/4;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.7s cubic-bezier(.22,1,.36,1), filter 0.5s;
+      filter: saturate(0.9) brightness(0.95);
+    }
+
+    .model-card:hover .card-img-wrap img {
+      transform: scale(1.06);
+      filter: saturate(1.1) brightness(1.05);
+    }
+
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(26,10,0,0.95) 0%, rgba(26,10,0,0.3) 50%, transparent 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 30px;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .model-card:hover .card-overlay {
+      opacity: 1;
+    }
+
+    .card-tag {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .card-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--cream);
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: rgba(250,243,232,0.75);
+      max-width: 300px;
+    }
+
+    .card-btn {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 10px 24px;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: all 0.3s;
+      width: fit-content;
+      cursor: pointer;
+    }
+
+    .card-btn:hover {
+      background: var(--gold);
+      color: var(--deep);
+    }
+
+    /* ── JEWELRY FEATURE ────────────────────────────── */
+    .jewelry-section {
+      padding: 80px 20px;
+      background: linear-gradient(135deg, #0d0500 0%, #2a1000 50%, #0d0500 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .jewelry-section::before {
+      content: '✦';
+      position: absolute;
+      font-size: 40rem;
+      color: rgba(200,151,42,0.02);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .jewelry-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .jewelry-inner { grid-template-columns: 1fr; }
+    }
+
+    .jewelry-img-wrap {
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(200,151,42,0.2);
+    }
+
+    .jewelry-img-wrap img {
+      width: 100%;
+      display: block;
+      transition: transform 0.7s ease, filter 0.5s;
+      filter: brightness(1.05) contrast(1.1);
+    }
+
+    .jewelry-img-wrap:hover img {
+      transform: scale(1.04);
+    }
+
+    .jewelry-glow {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(200,151,42,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .jewelry-content .section-label { text-align: left; }
+    .jewelry-content .section-title { text-align: left; }
+
+    .jewelry-content p {
+      font-size: 1.1rem;
+      line-height: 1.9;
+      color: rgba(250,243,232,0.75);
+      margin: 20px 0;
+    }
+
+    .features-list {
+      list-style: none;
+      margin: 30px 0;
+    }
+
+    .features-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      font-size: 1rem;
+      color: rgba(250,243,232,0.8);
+      border-bottom: 1px solid rgba(200,151,42,0.1);
+    }
+
+    .features-list li::before {
+      content: '✦';
+      color: var(--gold);
+      font-size: 0.6rem;
+      flex-shrink: 0;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 16px 40px;
+      background: linear-gradient(135deg, var(--gold), #a07020);
+      color: var(--deep);
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.3em;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: all 0.3s;
+      box-shadow: 0 8px 30px rgba(200,151,42,0.3);
+      cursor: pointer;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(200,151,42,0.4);
+    }
+
+    /* ── HERITAGE STRIP ───────────────────────────── */
+    .heritage-strip {
+      padding: 60px 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .heritage-strip { grid-template-columns: 1fr; }
+    }
+
+    .heritage-item {
+      padding: 40px 30px;
+      border: 1px solid rgba(200,151,42,0.15);
+      border-radius: 2px;
+      transition: border-color 0.4s, background 0.4s;
+    }
+
+    .heritage-item:hover {
+      border-color: rgba(200,151,42,0.5);
+      background: rgba(200,151,42,0.04);
+    }
+
+    .heritage-icon {
+      font-size: 2.2rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .heritage-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--cream);
+      margin-bottom: 10px;
+    }
+
+    .heritage-text {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: rgba(250,243,232,0.6);
+    }
+
+    /* ── CONTACT ──────────────────────────────────── */
+    .contact-section {
+      padding: 90px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .contact-section { grid-template-columns: 1fr; gap: 40px; padding: 60px 24px; }
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+
+    .contact-icon {
+      font-size: 1.5rem;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .contact-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .contact-value {
+      font-size: 1rem;
+      color: rgba(250,243,232,0.85);
+      line-height: 1.6;
+    }
+
+    .contact-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 10px 28px;
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-decoration: none;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .contact-btn:hover {
+      background: var(--gold);
+      color: var(--deep);
+    }
+
+    /* ── HELP / FAQ ────────────────────────────────── */
+    .help-section {
+      padding: 80px 40px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 600px) { .help-section { padding: 60px 20px; } }
+
+    .faq-item {
+      border-bottom: 1px solid rgba(200,151,42,0.15);
+      padding: 24px 0;
+      cursor: pointer;
+    }
+
+    .faq-question {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      color: var(--cream);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .faq-arrow {
+      color: var(--gold);
+      font-size: 1.1rem;
+      transition: transform 0.3s;
+      flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+    .faq-answer {
+      font-size: 0.95rem;
+      color: rgba(250,243,232,0.65);
+      line-height: 1.8;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 200px;
+      padding-top: 14px;
+    }
+
+    /* ── FOOTER ───────────────────────────────────── */
+    footer {
+      padding: 50px 20px 30px;
+      text-align: center;
+      border-top: 1px solid rgba(200,151,42,0.15);
+    }
+
+    .footer-nav {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .footer-nav a {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: rgba(250,243,232,0.45);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.3s;
+      cursor: pointer;
+    }
+
+    .footer-nav a:hover { color: var(--gold); }
+
+    .footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #FAF3E8 20%, var(--gold) 60%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .footer-tagline {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.35em;
+      color: rgba(250,243,232,0.4);
+    }
+
+    /* ── ANIMATIONS ───────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Decorative corner ornaments on model cards */
+    .corner-tl, .corner-br {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 10;
+    }
+
+    .corner-tl { top: 12px; left: 12px; border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+    .corner-br { bottom: 12px; right: 12px; border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+
+    .model-card:hover .corner-tl,
+    .model-card:hover .corner-br {
+      opacity: 1;
+    }
+
+    /* Tribal pattern bar */
+    .tribal-bar {
+      height: 6px;
+      background: repeating-linear-gradient(
+        90deg,
+        #8B1A1A 0px, #8B1A1A 12px,
+        #C8972A 12px, #C8972A 24px,
+        #1A0A00 24px, #1A0A00 36px,
+        #C8972A 36px, #C8972A 48px
+      );
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TRIBAL PATTERN BAR -->
+  <div class="tribal-bar"></div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">EST. NORTHEAST INDIA · INDIGENOUS ARTISTRY</div>
+    <h1 class="hero-title">Tripura<br/>Craftsmen</h1>
+    <p class="hero-sub">WOVEN WITH HERITAGE · ADORNED WITH TRADITION</p>
+    <div class="hero-divider"></div>
+    <p style="font-size:1.15rem;line-height:1.9;color:rgba(250,243,232,0.65);text-align:center;max-width:560px;animation:fadeUp 1s ease 0.7s both">
+      Preserving the sacred textile traditions of Tripura's indigenous communities —
+      each thread, bead, and silver coin a testament to centuries of craftsmanship.
+    </p>
+  </section>
+
+  <!-- TRIBAL PATTERN BAR -->
+  <div class="tribal-bar"></div>
+
+  <!-- MODELS SECTION -->
+  <section class="models-section">
+    <p class="section-label reveal">HERITAGE COLLECTION 2025</p>
+    <h2 class="section-title reveal">Living the Risa &amp; Pachra</h2>
+    <p class="section-desc reveal">
+      Traditional handwoven garments of Tripura — the Risa, Rignai, and Pachra —
+      worn with pride by the indigenous Tripuri people for generations.
+    </p>
+
+    <div class="models-grid">
+
+      <!-- Card 1 — Women's Wear -->
+      <div class="model-card reveal">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <div class="card-img-wrap">
+          <img src="/static/women_wear.jpg" alt="Women's Heritage Wear" />
+        </div>
+        <div class="card-overlay">
+          <span class="card-tag">WOMEN'S HERITAGE · RISA COLLECTION</span>
+          <h3 class="card-name">Risa &amp; Rignai</h3>
+          <p class="card-desc">
+            Hand-woven body cloth adorned with traditional motifs, paired with
+            silver coin necklaces and statement earrings of the Tripuri tradition.
+          </p>
+          <a onclick="navigateTo('womens_wear')" class="card-btn">EXPLORE COLLECTION</a>
+        </div>
+      </div>
+
+      <!-- Card 2 — Men's Wear -->
+      <div class="model-card reveal" style="transition-delay: 0.1s">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <div class="card-img-wrap">
+          <img src="/static/men_wear.jpg" alt="Men's Heritage Wear" />
+        </div>
+        <div class="card-overlay">
+          <span class="card-tag">MEN'S HERITAGE · KUBAI COLLECTION</span>
+          <h3 class="card-name">Kubai &amp; Rignai Dhoti</h3>
+          <p class="card-desc">
+            Vibrant handloom shirt woven in sacred crimson and gold stripes,
+            paired with the traditional white dhoti — timeless Tripuri masculinity.
+          </p>
+          <a onclick="navigateTo('mens_wear')" class="card-btn">EXPLORE COLLECTION</a>
+        </div>
+      </div>
+
+      <!-- Card 3 — Jewellery -->
+      <div class="model-card reveal" style="transition-delay: 0.2s">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <div class="card-img-wrap">
+          <img src="/static/jewellery.jpg" alt="Tribal Silver Jewellery" />
+        </div>
+        <div class="card-overlay">
+          <span class="card-tag">SILVER JEWELLERY · ARTISAN CRAFTED</span>
+          <h3 class="card-name">Mwktai &amp; Necklace</h3>
+          <p class="card-desc">
+            Hand-hammered silver torque necklaces and coin pendants —
+            each piece forged by generations of Tripuri silversmiths.
+          </p>
+          <a onclick="navigateTo('jewellery')" class="card-btn">SHOP JEWELLERY</a>
+        </div>
+      </div>
+
+      <!-- Card 4 — Home Décor -->
+      <div class="model-card reveal" style="transition-delay: 0.3s">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <div class="card-img-wrap">
+          <img src="/static/home_decor.jpg" alt="Bamboo Home Décor" />
+        </div>
+        <div class="card-overlay">
+          <span class="card-tag">HOME DÉCOR · BAMBOO &amp; CANE</span>
+          <h3 class="card-name">Bamboo Crafts</h3>
+          <p class="card-desc">
+            Handcrafted bamboo lamps, baskets, furniture and décor —
+            the living forest transformed by artisan hands.
+          </p>
+          <a onclick="navigateTo('home_decor')" class="card-btn">EXPLORE DÉCOR</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TRIBAL BAR -->
+  <div class="tribal-bar"></div>
+
+  <!-- JEWELRY FEATURE -->
+  <section class="jewelry-section">
+    <div class="jewelry-inner">
+      <div class="jewelry-img-wrap reveal">
+        <img src="/static/sacred_silver.jpg" alt="Traditional Tripura Silver Jewelry" />
+        <div class="jewelry-glow"></div>
+      </div>
+      <div class="jewelry-content">
+        <p class="section-label reveal">ARTISAN SILVER · SINCE ANTIQUITY</p>
+        <h2 class="section-title reveal" style="font-size:clamp(1.5rem,3vw,2.6rem)">The Sacred Silver<br/>of Tripura</h2>
+        <p class="reveal">
+          The iconic silver torque and coin necklace you see here is not merely
+          ornament — it is cultural identity. Passed down through generations,
+          these pieces are worn during festivals, ceremonies, and sacred rituals
+          by Tripuri women.
+        </p>
+        <ul class="features-list reveal">
+          <li>Hand-hammered from pure 92.5 silver by master artisans</li>
+          <li>Traditional crescent torque — symbol of feminine grace</li>
+          <li>Coin pendants hand-engraved with ancestral motifs</li>
+          <li>Ethically sourced, community-supported craftsmanship</li>
+          <li>Each piece comes with a certificate of authenticity</li>
+        </ul>
+        <a onclick="navigateTo('jewellery')" class="cta-btn reveal">DISCOVER JEWELRY →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRIBAL BAR -->
+  <div class="tribal-bar"></div>
+
+  <!-- HERITAGE PILLARS -->
+  <section>
+    <div class="heritage-strip">
+      <div class="heritage-item reveal">
+        <span class="heritage-icon">🧵</span>
+        <h3 class="heritage-name">Handloom Weaving</h3>
+        <p class="heritage-text">
+          Every fabric woven on traditional pit looms using time-honoured
+          techniques passed from mother to daughter for over a thousand years.
+        </p>
+      </div>
+      <div class="heritage-item reveal" style="transition-delay:0.15s">
+        <span class="heritage-icon">🪙</span>
+        <h3 class="heritage-name">Silver Smithing</h3>
+        <p class="heritage-text">
+          Artisan silversmiths forge each ornament by hand — torques, earrings,
+          and coin necklaces shaped with ancestral tools and sacred intent.
+        </p>
+      </div>
+      <div class="heritage-item reveal" style="transition-delay:0.3s">
+        <span class="heritage-icon">🏡</span>
+        <h3 class="heritage-name">Community First</h3>
+        <p class="heritage-text">
+          Every purchase directly supports indigenous artisan families across
+          Tripura's hills, preserving their livelihood and cultural identity.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRIBAL BAR -->
+  <div class="tribal-bar"></div>
+
+  <!-- HELP / FAQ -->
+  <section style="background: rgba(255,255,255,0.02); padding: 20px 0 0;">
+    <div style="text-align:center; padding: 70px 20px 40px;">
+      <p class="section-label reveal">SUPPORT</p>
+      <h2 class="section-title reveal">Help &amp; FAQs</h2>
+    </div>
+    <div class="help-section">
+
+      <div class="faq-item reveal" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          How long does delivery take?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          Orders are typically dispatched within 2–3 business days from Tripura. Delivery across India
+          takes 5–8 business days. You'll receive a tracking link via email and WhatsApp once shipped.
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay:0.1s" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          Are the products genuinely handmade?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          Every product is handcrafted by indigenous artisans from Tripura's tribal communities.
+          Each piece comes with a certificate of authenticity stating the artisan community and craft technique.
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay:0.2s" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          What is the return &amp; exchange policy?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          We accept returns within 7 days of delivery if the item is unused and in original condition.
+          Exchanges are processed within 5 business days. Contact us via WhatsApp or email to initiate a return.
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay:0.3s" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          Can I place a custom or bulk order?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          Yes! We welcome custom orders for weddings, corporate gifting, and bulk purchases.
+          Please reach out via WhatsApp or email with your requirements and we'll get back within 24 hours.
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay:0.4s" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          Which payment methods are accepted?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          We accept all major UPI apps (GPay, PhonePe, Paytm), credit/debit cards, and net banking
+          via Razorpay — India's most trusted payment gateway. All transactions are fully secure.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TRIBAL BAR -->
+  <div class="tribal-bar"></div>
+
+  <!-- CONTACT US -->
+  <section>
+    <div style="text-align:center; padding: 70px 20px 20px;">
+      <p class="section-label reveal">GET IN TOUCH</p>
+      <h2 class="section-title reveal">Contact Us</h2>
+      <p style="color:rgba(250,243,232,0.55); font-size:1rem; margin-top:12px;" class="reveal">
+        We're a small team in Tripura — your message will always reach a real person.
+      </p>
+    </div>
+
+    <div class="contact-section">
+      <div>
+        <div class="contact-item reveal">
+          <span class="contact-icon">📱</span>
+          <div>
+            <div class="contact-label">WhatsApp / Phone</div>
+            <div class="contact-value">+91 XXXXX XXXXX</div>
+            <a href="https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20have%20a%20query%20about%20Tripura%20Craftsmen"
+               target="_blank" class="contact-btn">CHAT ON WHATSAPP</a>
+          </div>
+        </div>
+
+        <div class="contact-item reveal" style="transition-delay:0.15s">
+          <span class="contact-icon">✉️</span>
+          <div>
+            <div class="contact-label">Email</div>
+            <div class="contact-value">hello@tripuracraftsmen.com</div>
+            <a href="mailto:hello@tripuracraftsmen.com" class="contact-btn" style="margin-top:8px">SEND EMAIL</a>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="contact-item reveal" style="transition-delay:0.1s">
+          <span class="contact-icon">📍</span>
+          <div>
+            <div class="contact-label">Location</div>
+            <div class="contact-value">Agartala, Tripura<br/>Northeast India — 799 001</div>
+          </div>
+        </div>
+
+        <div class="contact-item reveal" style="transition-delay:0.25s">
+          <span class="contact-icon">🕐</span>
+          <div>
+            <div class="contact-label">Working Hours</div>
+            <div class="contact-value">Monday – Saturday<br/>10:00 AM – 6:00 PM IST</div>
+          </div>
+        </div>
+
+        <div class="contact-item reveal" style="transition-delay:0.35s">
+          <span class="contact-icon">📦</span>
+          <div>
+            <div class="contact-label">Track Your Order</div>
+            <div class="contact-value">Enter your email to track orders</div>
+            <a href="/track-order" class="contact-btn" style="margin-top:8px">TRACK ORDER</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRIBAL BAR -->
+  <div class="tribal-bar"></div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">Tripura Craftsmen</div>
+    <p class="footer-tagline">WOVEN WITH HERITAGE · ADORNED WITH TRADITION · MADE WITH LOVE</p>
+    <div class="footer-nav" style="margin-top: 24px;">
+      <a href="/womens-wear">Women's Wear</a>
+      <a href="/mens-wear">Men's Wear</a>
+      <a href="/jewellery">Jewellery</a>
+      <a href="/home-decor">Home Décor</a>
+      <a href="/track-order">Track Order</a>
+      <a href="/contact">Contact</a>
+      <a href="/help">Help</a>
+    </div>
+    <p style="font-family:'Cinzel',serif; font-size:0.6rem; color:rgba(250,243,232,0.2);
+       letter-spacing:0.2em; margin-top: 20px;">
+      © 2025 TRIPURA CRAFTSMEN · ALL RIGHTS RESERVED
+    </p>
+  </footer>
+
+  <script>
+    // ── Navigation ─────────────────────────────────────────────
+    function navigateTo(page) {
+      const routes = {
+        womens_wear:  '/womens-wear',
+        mens_wear:    '/mens-wear',
+        jewellery:    '/jewellery',
+        home_decor:   '/home-decor',
+        contact:      '/contact',
+        help:         '/help',
+        track_order:  '/track-order',
+      };
+      window.location.href = routes[page] || '/';
+    }
+
+    // ── FAQ accordion ───────────────────────────────────────────
+    function toggleFaq(el) {
+      el.classList.toggle('open');
+    }
+
+    // ── Intersection observer for reveal animations ─────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

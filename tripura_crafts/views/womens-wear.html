@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Women's Wear — Tripura Craftsmen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--gold:#C8972A;--deep:#1A0A00;--cream:#FAF3E8;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Cormorant Garamond',serif;background:var(--deep);color:var(--cream);overflow-x:hidden;}
+    .tribal-bar{height:6px;background:repeating-linear-gradient(90deg,#8B1A1A 0px,#8B1A1A 12px,#C8972A 12px,#C8972A 24px,#1A0A00 24px,#1A0A00 36px,#C8972A 36px,#C8972A 48px);}
+    .top-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:rgba(26,10,0,0.97);border-bottom:1px solid rgba(200,151,42,0.15);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+    .back-link{font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.2em;color:rgba(250,243,232,0.6);text-decoration:none;display:flex;align-items:center;gap:8px;transition:color 0.3s;}
+    .back-link:hover{color:var(--gold);}
+    .brand-small{font-family:'Playfair Display',serif;font-size:1.25rem;background:linear-gradient(135deg,#FAF3E8 20%,var(--gold) 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;}
+    .nav-links{display:flex;gap:28px;}
+    .nav-links a{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.25em;color:rgba(250,243,232,0.4);text-decoration:none;transition:color 0.3s;}
+    .nav-links a:hover,.nav-links a.active{color:var(--gold);}
+    @media(max-width:640px){.top-nav{padding:14px 20px;}.nav-links{display:none;}}
+    .page-hero{padding:64px 20px 56px;text-align:center;background:radial-gradient(ellipse at 50% 0%,#3d1a00 0%,#1A0A00 70%);border-bottom:1px solid rgba(200,151,42,0.2);}
+    .page-eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.4em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+    .page-title{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,3.8rem);font-weight:700;color:var(--cream);margin-bottom:14px;}
+    .page-subtitle{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:rgba(250,243,232,0.6);max-width:520px;margin:0 auto;line-height:1.8;}
+    footer{padding:44px 20px 28px;text-align:center;border-top:1px solid rgba(200,151,42,0.15);}
+    .footer-brand{font-family:'Playfair Display',serif;font-size:1.5rem;background:linear-gradient(135deg,#FAF3E8 20%,var(--gold) 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;}
+    .footer-tagline{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.32em;color:rgba(250,243,232,0.3);margin-bottom:20px;}
+    .footer-nav{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;margin-bottom:22px;}
+    .footer-nav a{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.25em;color:rgba(250,243,232,0.35);text-decoration:none;transition:color 0.3s;}
+    .footer-nav a:hover{color:var(--gold);}
+    .footer-copy{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(250,243,232,0.2);letter-spacing:0.2em;}
+    .reveal{opacity:0;transform:translateY(40px);transition:opacity 0.8s ease,transform 0.8s ease;}
+    .reveal.visible{opacity:1;transform:translateY(0);}
+
+    /* ── Collections Grid ────────────────────────────────── */
+    .collections-wrap{max-width:1140px;margin:0 auto;padding:52px 24px 64px;}
+    .collections-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;}
+    @media(max-width:900px){.collections-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:540px){.collections-grid{grid-template-columns:1fr;}}
+
+    .coll-card{border-radius:8px;overflow:hidden;background:#1e0d00;border:1px solid rgba(200,151,42,0.12);transition:transform 0.4s,border-color 0.4s;cursor:pointer;}
+    .coll-card:hover{transform:translateY(-8px);border-color:rgba(200,151,42,0.45);}
+    .coll-img{width:100%;aspect-ratio:3/4;background:linear-gradient(160deg,#2a1200 0%,#4a2000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;}
+    .coll-img-icon{font-size:3rem;opacity:0.4;}
+    .coll-img-label{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.25em;color:rgba(200,151,42,0.5);text-transform:uppercase;}
+    .coll-info{padding:20px 20px 24px;}
+    .coll-tribe{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+    .coll-name{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--cream);font-weight:700;margin-bottom:6px;}
+    .coll-tagline{font-family:'Cormorant Garamond',serif;font-size:0.9rem;color:rgba(250,243,232,0.5);line-height:1.6;margin-bottom:16px;}
+    .explore-btn{display:inline-block;padding:9px 22px;border:1px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.22em;text-decoration:none;border-radius:2px;transition:all 0.3s;}
+    .explore-btn:hover{background:var(--gold);color:var(--deep);}
+  </style>
+</head>
+<body>
+
+<div class="tribal-bar"></div>
+
+<nav class="top-nav">
+  <a href="/" class="back-link">← HOME</a>
+  <a href="/" class="brand-small">Tripura Craftsmen</a>
+  <div class="nav-links">
+    <a href="/womens-wear" class="active">Women's</a>
+    <a href="/mens-wear">Men's</a>
+    <a href="/jewellery">Jewellery</a>
+    <a href="/home-decor">Home Décor</a>
+    <a href="/contact">Contact</a>
+  </div>
+</nav>
+
+<div class="tribal-bar"></div>
+
+<header class="page-hero">
+  <p class="page-eyebrow">✦ &nbsp; Indigenous Handloom &nbsp; ✦</p>
+  <h1 class="page-title">Women's Wear</h1>
+  <p class="page-subtitle">Six tribes. Six distinct weaving traditions.<br/>Each thread a story passed from mother to daughter.</p>
+</header>
+
+<div class="tribal-bar"></div>
+
+<main class="collections-wrap">
+  <div class="collections-grid">
+
+    <!-- Risa Royale -->
+    <div class="coll-card reveal">
+      <div class="coll-img"><span class="coll-img-icon">🧵</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-info">
+        <div class="coll-tribe">Tripuri Collection</div>
+        <div class="coll-name">Risa Royale</div>
+        <div class="coll-tagline">The original. The iconic. Two thousand years on the loom.</div>
+        <a href="/womens-wear/risa-royale" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+    <!-- Stripe & Soul -->
+    <div class="coll-card reveal" style="transition-delay:0.08s">
+      <div class="coll-img"><span class="coll-img-icon">🎨</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-info">
+        <div class="coll-tribe">Reang Collection</div>
+        <div class="coll-name">Stripe &amp; Soul</div>
+        <div class="coll-tagline">Bold stripes, ancient stories woven thread by thread.</div>
+        <a href="/womens-wear/stripe-soul" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+    <!-- Pinon Poetry -->
+    <div class="coll-card reveal" style="transition-delay:0.16s">
+      <div class="coll-img"><span class="coll-img-icon">🌿</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-info">
+        <div class="coll-tribe">Chakma Collection</div>
+        <div class="coll-name">Pinon Poetry</div>
+        <div class="coll-tagline">Where geometry meets grace.</div>
+        <a href="/womens-wear/pinon-poetry" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+    <!-- Waichum Whispers -->
+    <div class="coll-card reveal" style="transition-delay:0.24s">
+      <div class="coll-img"><span class="coll-img-icon">🌸</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-info">
+        <div class="coll-tribe">Jamatia Collection</div>
+        <div class="coll-name">Waichum Whispers</div>
+        <div class="coll-tagline">Quiet elegance. Roots that run deep.</div>
+        <a href="/womens-wear/waichum-whispers" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+    <!-- Sacred Threads -->
+    <div class="coll-card reveal" style="transition-delay:0.32s">
+      <div class="coll-img"><span class="coll-img-icon">🪷</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-info">
+        <div class="coll-tribe">Mog Collection</div>
+        <div class="coll-name">Sacred Threads</div>
+        <div class="coll-tagline">Woven with devotion, worn with pride.</div>
+        <a href="/womens-wear/sacred-threads" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+    <!-- The Hill Collective -->
+    <div class="coll-card reveal" style="transition-delay:0.40s">
+      <div class="coll-img"><span class="coll-img-icon">⛰️</span><span class="coll-img-label">Photo Coming Soon</span></div>
+      <div class="coll-info">
+        <div class="coll-tribe">Multi-Tribe</div>
+        <div class="coll-name">The Hill Collective</div>
+        <div class="coll-tagline">Many tribes. One living tradition.</div>
+        <a href="/womens-wear/hill-collective" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="tribal-bar"></div>
+
+<footer>
+  <div class="footer-brand">Tripura Craftsmen</div>
+  <p class="footer-tagline">WOVEN WITH HERITAGE · ADORNED WITH TRADITION · MADE WITH LOVE</p>
+  <div class="footer-nav">
+    <a href="/womens-wear">Women's Wear</a>
+    <a href="/mens-wear">Men's Wear</a>
+    <a href="/jewellery">Jewellery</a>
+    <a href="/home-decor">Home Décor</a>
+    <a href="/track-order">Track Order</a>
+    <a href="/contact">Contact</a>
+    <a href="/help">Help</a>
+  </div>
+  <p class="footer-copy">© 2025 TRIPURA CRAFTSMEN · ALL RIGHTS RESERVED</p>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} });
+  },{threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>

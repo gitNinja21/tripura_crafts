@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Help &amp; FAQs — Tripura Craftsmen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--gold:#C8972A;--deep:#1A0A00;--cream:#FAF3E8;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Cormorant Garamond',serif;background:var(--deep);color:var(--cream);overflow-x:hidden;}
+    .tribal-bar{height:6px;background:repeating-linear-gradient(90deg,#8B1A1A 0,#8B1A1A 12px,#C8972A 12px,#C8972A 24px,#1A0A00 24px,#1A0A00 36px,#C8972A 36px,#C8972A 48px);}
+    .top-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:rgba(26,10,0,0.97);border-bottom:1px solid rgba(200,151,42,0.15);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+    .back-link{font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.2em;color:rgba(250,243,232,0.6);text-decoration:none;transition:color 0.3s;}.back-link:hover{color:var(--gold);}
+    .brand-small{font-family:'Playfair Display',serif;font-size:1.25rem;background:linear-gradient(135deg,#FAF3E8 20%,var(--gold) 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;}
+    .nav-links{display:flex;gap:28px;}
+    .nav-links a{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.25em;color:rgba(250,243,232,0.4);text-decoration:none;transition:color 0.3s;}
+    .nav-links a:hover,.nav-links a.active{color:var(--gold);}
+    @media(max-width:640px){.top-nav{padding:14px 20px;}.nav-links{display:none;}}
+    .page-hero{padding:60px 20px 50px;text-align:center;background:radial-gradient(ellipse at 50% 0%,#3d1a00 0%,#1A0A00 70%);border-bottom:1px solid rgba(200,151,42,0.2);}
+    .page-eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.4em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+    .page-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.4rem);font-weight:700;color:var(--cream);margin-bottom:14px;}
+    .page-subtitle{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(250,243,232,0.55);max-width:480px;margin:0 auto;line-height:1.8;}
+    .faq-wrap{max-width:800px;margin:0 auto;padding:56px 24px 72px;}
+    .faq-item{border-bottom:1px solid rgba(200,151,42,0.15);padding:24px 0;cursor:pointer;}
+    .faq-question{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--cream);display:flex;justify-content:space-between;align-items:center;gap:16px;}
+    .faq-arrow{color:var(--gold);font-size:1.1rem;transition:transform 0.3s;flex-shrink:0;}
+    .faq-item.open .faq-arrow{transform:rotate(180deg);}
+    .faq-answer{font-size:0.98rem;color:rgba(250,243,232,0.65);line-height:1.85;max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.3s;}
+    .faq-item.open .faq-answer{max-height:300px;padding-top:16px;}
+    .contact-cta{text-align:center;padding:0 24px 64px;}
+    .contact-cta p{font-size:1.05rem;color:rgba(250,243,232,0.55);margin-bottom:20px;}
+    .cta-btn{display:inline-block;padding:14px 36px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.28em;text-decoration:none;border-radius:2px;transition:all 0.3s;}
+    .cta-btn:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(200,151,42,0.35);}
+    footer{padding:44px 20px 28px;text-align:center;border-top:1px solid rgba(200,151,42,0.15);}
+    .footer-brand{font-family:'Playfair Display',serif;font-size:1.4rem;background:linear-gradient(135deg,#FAF3E8 20%,var(--gold) 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+    .footer-nav{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:14px 0 10px;}
+    .footer-nav a{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.22em;color:rgba(250,243,232,0.3);text-decoration:none;transition:color 0.3s;}
+    .footer-nav a:hover{color:var(--gold);}
+    .footer-copy{font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(250,243,232,0.18);letter-spacing:0.2em;}
+  </style>
+</head>
+<body>
+
+<div class="tribal-bar"></div>
+<nav class="top-nav">
+  <a href="/" class="back-link">← HOME</a>
+  <a href="/" class="brand-small">Tripura Craftsmen</a>
+  <div class="nav-links">
+    <a href="/womens-wear">Women's</a>
+    <a href="/mens-wear">Men's</a>
+    <a href="/jewellery">Jewellery</a>
+    <a href="/home-decor">Home Décor</a>
+    <a href="/contact">Contact</a>
+  </div>
+</nav>
+<div class="tribal-bar"></div>
+
+<header class="page-hero">
+  <p class="page-eyebrow">SUPPORT</p>
+  <h1 class="page-title">Help &amp; FAQs</h1>
+  <p class="page-subtitle">Everything you need to know about ordering, delivery and our products.</p>
+</header>
+
+<div class="tribal-bar"></div>
+
+<div class="faq-wrap">
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-question">How long does delivery take? <span class="faq-arrow">▼</span></div>
+    <div class="faq-answer">Orders are typically dispatched within 2–3 business days from Agartala, Tripura. Delivery across India takes 5–8 business days. You'll receive a tracking link via email and WhatsApp as soon as your order ships.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-question">Are the products genuinely handmade? <span class="faq-arrow">▼</span></div>
+    <div class="faq-answer">Every product is handcrafted by indigenous artisans from Tripura's tribal communities — Tripuri, Reang, Chakma, Jamatia, and Mog. Each piece comes with a certificate of authenticity stating the artisan community and craft technique used.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-question">What is the return &amp; exchange policy? <span class="faq-arrow">▼</span></div>
+    <div class="faq-answer">We accept returns within 7 days of delivery if the item is unused and in its original condition. Exchanges are processed within 5 business days. Contact us via WhatsApp or email with your order ID to initiate a return — we'll handle everything smoothly.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-question">Can I place a custom or bulk order? <span class="faq-arrow">▼</span></div>
+    <div class="faq-answer">Absolutely! We welcome custom orders for weddings, corporate gifting, NGO support programmes, and bulk purchases. Reach out via WhatsApp or email with your requirements and we'll respond within 24 hours with a personalised quote.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-question">Which payment methods are accepted? <span class="faq-arrow">▼</span></div>
+    <div class="faq-answer">We accept all major UPI apps (GPay, PhonePe, Paytm), credit and debit cards, and net banking via Razorpay — India's most trusted payment gateway. All transactions are fully encrypted and secure.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-question">Do you ship internationally? <span class="faq-arrow">▼</span></div>
+    <div class="faq-answer">International shipping is currently in the works. We expect to launch global delivery within the next few months. In the meantime, if you're based outside India and would like to order, please contact us directly and we'll find a way.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-question">How do I care for handwoven fabrics? <span class="faq-arrow">▼</span></div>
+    <div class="faq-answer">Handwoven fabrics should be hand-washed in cold water with a mild detergent. Avoid wringing — gently press out excess water and dry in shade. For silver jewellery, store in a dry cloth pouch and wipe with a soft cloth after wearing. Each order includes a care card.</div>
+  </div>
+
+</div>
+
+<div class="contact-cta">
+  <p>Still have a question? We're one message away.</p>
+  <a href="/contact" class="cta-btn">CONTACT US</a>
+</div>
+
+<div class="tribal-bar"></div>
+<footer>
+  <div class="footer-brand">Tripura Craftsmen</div>
+  <div class="footer-nav">
+    <a href="/womens-wear">Women's Wear</a>
+    <a href="/mens-wear">Men's Wear</a>
+    <a href="/jewellery">Jewellery</a>
+    <a href="/home-decor">Home Décor</a>
+    <a href="/track-order">Track Order</a>
+    <a href="/contact">Contact</a>
+    <a href="/help">Help</a>
+  </div>
+  <p class="footer-copy">© 2025 TRIPURA CRAFTSMEN · ALL RIGHTS RESERVED</p>
+</footer>
+
+</body>
+</html>
