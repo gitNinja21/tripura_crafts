@@ -44,24 +44,26 @@
     .coll-card:hover .explore-btn,.coll-card.active .explore-btn{background:var(--gold);color:var(--deep);}
 
     /* ── Product drawer ── */
-    .product-drawer{grid-column:1/-1;max-height:0;overflow:hidden;transition:max-height 0.6s ease,opacity 0.4s ease;opacity:0;}
-    .product-drawer.open{max-height:600px;opacity:1;}
-    .drawer-inner{display:grid;grid-template-columns:1fr 1fr;gap:0;background:#1e0d00;border:1px solid rgba(200,151,42,0.35);border-radius:10px;overflow:hidden;margin-top:4px;}
-    @media(max-width:700px){.drawer-inner{grid-template-columns:1fr;}}
-    .drawer-img{width:100%;aspect-ratio:16/9;overflow:hidden;}
-    .drawer-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s;}
-    .drawer-inner:hover .drawer-img img{transform:scale(1.03);}
-    .drawer-details{padding:32px 36px;display:flex;flex-direction:column;justify-content:center;}
-    @media(max-width:700px){.drawer-details{padding:24px;}}
-    .drawer-badge{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
-    .drawer-name{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--cream);font-weight:700;margin-bottom:8px;}
-    .drawer-desc{font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:rgba(250,243,232,0.55);line-height:1.75;margin-bottom:18px;}
-    .drawer-price{font-family:'Cinzel',serif;font-size:1.35rem;color:var(--gold);margin-bottom:4px;}
-    .drawer-price-note{font-family:'Cormorant Garamond',serif;font-size:0.82rem;color:rgba(250,243,232,0.3);margin-bottom:22px;}
-    .buy-btn{display:inline-block;padding:13px 32px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.28em;text-decoration:none;border-radius:2px;transition:all 0.3s;box-shadow:0 6px 24px rgba(200,151,42,0.3);}
-    .buy-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(200,151,42,0.45);}
-    .test-badge{display:inline-block;margin-left:10px;font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.2em;color:rgba(250,243,232,0.25);vertical-align:middle;}
-    .coming-drawer{padding:32px;text-align:center;}
+    .product-drawer{grid-column:1/-1;max-height:0;overflow:hidden;transition:max-height 0.7s ease,opacity 0.4s ease;opacity:0;}
+    .product-drawer.open{max-height:700px;opacity:1;}
+    .drawer-inner{background:#1e0d00;border:1px solid rgba(200,151,42,0.35);border-radius:10px;overflow:hidden;margin-top:4px;padding:28px 28px 32px;}
+    .drawer-heading{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.38em;color:var(--gold);text-transform:uppercase;margin-bottom:20px;}
+    .drawer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+    @media(max-width:860px){.drawer-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:540px){.drawer-grid{grid-template-columns:1fr;}}
+    .pcard{background:#150900;border:1px solid rgba(200,151,42,0.12);border-radius:8px;overflow:hidden;transition:border-color 0.3s,transform 0.3s;}
+    .pcard:hover{border-color:rgba(200,151,42,0.45);transform:translateY(-4px);}
+    .pcard-img{width:100%;aspect-ratio:4/3;overflow:hidden;}
+    .pcard-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s;}
+    .pcard:hover .pcard-img img{transform:scale(1.05);}
+    .pcard-body{padding:14px 16px 18px;}
+    .pcard-name{font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);font-weight:700;margin-bottom:4px;}
+    .pcard-desc{font-family:'Cormorant Garamond',serif;font-size:0.82rem;color:rgba(250,243,232,0.45);line-height:1.6;margin-bottom:12px;}
+    .pcard-price{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold);margin-bottom:12px;}
+    .buy-btn{display:inline-block;padding:10px 22px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.25em;text-decoration:none;border-radius:2px;transition:all 0.3s;box-shadow:0 4px 16px rgba(200,151,42,0.25);}
+    .buy-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,151,42,0.4);}
+    .test-badge{display:inline-block;margin-left:8px;font-family:'Cinzel',serif;font-size:0.45rem;letter-spacing:0.2em;color:rgba(250,243,232,0.2);vertical-align:middle;}
+    .coming-drawer{padding:40px;text-align:center;}
     .coming-drawer p{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:rgba(250,243,232,0.35);font-style:italic;}
 
     .coming-strip{text-align:center;padding:20px 20px 64px;}
@@ -193,19 +195,124 @@
 
   const collections = {
     kubai: {
-      img: '/static/kubai_test.jpg',
-      badge: "Tripuri Collection · Men's",
-      name: 'Kubai Heritage Shirt',
-      desc: 'A handwoven Kubai shirt in traditional crimson and gold stripes, crafted by Tripuri artisans on pit looms in Agartala. Worn during ceremonies and festivals — now available year-round. Made to order, ships in 5–7 days.',
-      price: '₹ 1,299',
-      note: 'Free shipping across India · Certificate of authenticity included',
-      waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Heritage%20Shirt%20%28%E2%82%B91%2C299%29%20from%20Mwktai.%20Please%20confirm%20availability.',
-      waLabel: 'BUY NOW — ₹1,299',
-      test: true
+      label: "Kubai — Tripuri Collection",
+      items: [
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Kubai Heritage Shirt',
+          desc: 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.',
+          price: '₹ 1,299',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Heritage%20Shirt%20%28%E2%82%B91%2C299%29%20from%20Mwktai.',
+          test: true
+        },
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Kubai Everyday',
+          desc: 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.',
+          price: '₹ 849',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Everyday%20%28%E2%82%B9849%29%20from%20Mwktai.',
+          test: true
+        },
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Kubai Ceremonial',
+          desc: 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.',
+          price: '₹ 2,099',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Ceremonial%20%28%E2%82%B92%2C099%29%20from%20Mwktai.',
+          test: true
+        }
+      ]
+    },
+    kamsoi: {
+      label: "Kamsoi — Reang Collection",
+      items: [
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Kamsoi Classic',
+          desc: 'Bold geometric weave in deep earth tones — the Reang man\'s mark of identity and strength.',
+          price: '₹ 1,199',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kamsoi%20Classic%20from%20Mwktai.',
+          test: true
+        },
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Kamsoi Wrap',
+          desc: 'Traditional lower garment worn during Reang festivals — wide body, vivid stripe work.',
+          price: '₹ 899',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kamsoi%20Wrap%20from%20Mwktai.',
+          test: true
+        },
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Kamsoi Full Set',
+          desc: 'Complete Reang men\'s ensemble — upper and lower in matching geometric pattern.',
+          price: '₹ 1,899',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kamsoi%20Full%20Set%20from%20Mwktai.',
+          test: true
+        }
+      ]
+    },
+    jummosulum: {
+      label: "Jummosulum — Chakma Collection",
+      items: [
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Jummosulum Classic',
+          desc: 'Intricate geometric patterns in silk-like cotton — the Chakma tradition of quiet, precise artistry.',
+          price: '₹ 1,349',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Jummosulum%20Classic%20from%20Mwktai.',
+          test: true
+        },
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Jummosulum Dhoti',
+          desc: 'Chakma ceremonial lower wrap with dense border — worn during Bizu and other celebrations.',
+          price: '₹ 999',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Jummosulum%20Dhoti%20from%20Mwktai.',
+          test: true
+        },
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Jummosulum Heritage',
+          desc: 'Premium natural-dye Jummosulum — heirloom quality, woven by master Chakma craftsmen.',
+          price: '₹ 2,299',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Jummosulum%20Heritage%20from%20Mwktai.',
+          test: true
+        }
+      ]
+    },
+    tuti: {
+      label: "Tuti — Jamatia Collection",
+      items: [
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Tuti Ceremonial',
+          desc: 'The Jamatia men\'s ceremonial cloth — worn during harvest festivals and community rituals.',
+          price: '₹ 1,249',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Tuti%20Ceremonial%20from%20Mwktai.',
+          test: true
+        },
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Tuti Everyday',
+          desc: 'Lightweight Tuti in softer cotton — daily wear that carries the Jamatia spirit.',
+          price: '₹ 849',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Tuti%20Everyday%20from%20Mwktai.',
+          test: true
+        },
+        {
+          img: '/static/kubai_test.jpg',
+          name: 'Tuti Wedding Set',
+          desc: 'Full Jamatia bridal ensemble for the groom — rich in texture and community meaning.',
+          price: '₹ 2,499',
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Tuti%20Wedding%20Set%20from%20Mwktai.',
+          test: true
+        }
+      ]
     }
   };
 
-  const comingSoon = `<div class="coming-drawer"><p>This collection is coming soon.<br/>Follow us to be notified when it drops.</p></div>`;
+  const comingSoon = `<div class="coming-drawer"><p>Products from this collection are coming soon.</p></div>`;
 
   let activeKey = null;
 
@@ -224,25 +331,27 @@
 
     const keys = ['kubai','kamsoi','jummosulum','tuti'];
     const idx = keys.indexOf(key);
+    // +1 offset after index 1 because drawer element sits between rows in DOM
     if (idx >= 0) cards[idx >= 2 ? idx + 1 : idx].classList.add('active');
 
     activeKey = key;
-    const data = collections[key];
+    const coll = collections[key];
 
-    if (data) {
-      inner.innerHTML = `
-        <div class="drawer-img"><img src="${data.img}" alt="${data.name}"/></div>
-        <div class="drawer-details">
-          <div class="drawer-badge">${data.badge}</div>
-          <div class="drawer-name">${data.name}</div>
-          <div class="drawer-desc">${data.desc}</div>
-          <div class="drawer-price">${data.price}</div>
-          <div class="drawer-price-note">${data.note}</div>
-          <div>
-            <a href="${data.waLink}" target="_blank" class="buy-btn">${data.waLabel}</a>
-            ${data.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
+    if (coll) {
+      const cards_html = coll.items.map(p => `
+        <div class="pcard">
+          <div class="pcard-img"><img src="${p.img}" alt="${p.name}"/></div>
+          <div class="pcard-body">
+            <div class="pcard-name">${p.name}</div>
+            <div class="pcard-desc">${p.desc}</div>
+            <div class="pcard-price">${p.price}</div>
+            <a href="${p.waLink}" target="_blank" class="buy-btn">BUY NOW</a>
+            ${p.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
           </div>
-        </div>`;
+        </div>`).join('');
+      inner.innerHTML = `
+        <div class="drawer-heading">✦ &nbsp; ${coll.label} &nbsp; ✦</div>
+        <div class="drawer-grid">${cards_html}</div>`;
     } else {
       inner.innerHTML = comingSoon;
     }
