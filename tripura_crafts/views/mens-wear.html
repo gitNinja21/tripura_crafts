@@ -29,38 +29,41 @@
     .collections-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:32px;}
     @media(max-width:700px){.collections-grid{grid-template-columns:1fr;}}
 
-    .coll-card{border-radius:8px;overflow:hidden;background:#1e0d00;border:1px solid rgba(200,151,42,0.12);transition:transform 0.4s,border-color 0.4s;cursor:pointer;}
-    .coll-card:hover{transform:translateY(-8px);border-color:rgba(200,151,42,0.45);}
+    /* ── Regular collection cards ── */
+    .coll-card{border-radius:8px;overflow:hidden;background:#1e0d00;border:1px solid rgba(200,151,42,0.12);transition:transform 0.4s,border-color 0.4s;cursor:default;}
+    .coll-card:hover{transform:translateY(-4px);border-color:rgba(200,151,42,0.3);}
     .coll-img{width:100%;aspect-ratio:16/9;background:#1a0800;position:relative;overflow:hidden;}
     .coll-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform 0.5s ease;}
-    .coll-card:hover .coll-img img{transform:scale(1.05);}
+    .coll-card:hover .coll-img img{transform:scale(1.04);}
     .coll-info{padding:24px 24px 28px;}
     .coll-tribe{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
     .coll-name{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);font-weight:700;margin-bottom:6px;}
-    .coll-tagline{font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:rgba(250,243,232,0.5);line-height:1.6;margin-bottom:18px;}
-    .explore-btn{display:inline-block;padding:10px 26px;border:1px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.22em;text-decoration:none;border-radius:2px;transition:all 0.3s;}
-    .explore-btn:hover{background:var(--gold);color:var(--deep);}
+    .coll-tagline{font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:rgba(250,243,232,0.5);line-height:1.6;margin-bottom:14px;}
+    .coming-label{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.2em;color:rgba(250,243,232,0.2);text-transform:uppercase;}
 
-    /* ── TEST PRODUCT SECTION ── */
-    .products-section{max-width:1140px;margin:0 auto;padding:0 24px 72px;}
-    .products-heading{text-align:center;padding:48px 0 36px;}
-    .products-label{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.4em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
-    .products-title{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);color:var(--cream);font-weight:700;}
-    .product-card{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;background:#1e0d00;border:1px solid rgba(200,151,42,0.18);border-radius:10px;overflow:hidden;}
-    @media(max-width:700px){.product-card{grid-template-columns:1fr;}}
-    .product-img{width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;}
-    .product-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.6s ease;}
-    .product-card:hover .product-img img{transform:scale(1.04);}
-    .product-details{padding:36px 40px 36px 0;}
-    @media(max-width:700px){.product-details{padding:28px 24px 32px;}}
-    .product-badge{display:inline-block;font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.3em;color:var(--gold);border:1px solid rgba(200,151,42,0.35);padding:5px 14px;border-radius:20px;margin-bottom:16px;text-transform:uppercase;}
-    .product-name{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,2.5vw,2rem);color:var(--cream);font-weight:700;margin-bottom:10px;}
-    .product-desc{font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(250,243,232,0.6);line-height:1.8;margin-bottom:24px;}
-    .product-price{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);letter-spacing:0.05em;margin-bottom:6px;}
-    .product-price-note{font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(250,243,232,0.35);margin-bottom:28px;}
-    .buy-btn{display:inline-block;padding:14px 36px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.28em;text-decoration:none;border-radius:2px;transition:all 0.3s;box-shadow:0 6px 24px rgba(200,151,42,0.3);}
+    /* ── Featured product card ── */
+    .featured-card{grid-column:1/-1;border-radius:10px;overflow:hidden;background:#1e0d00;border:2px solid rgba(200,151,42,0.35);display:grid;grid-template-columns:1fr 1fr;transition:border-color 0.4s;}
+    .featured-card:hover{border-color:rgba(200,151,42,0.7);}
+    @media(max-width:700px){.featured-card{grid-template-columns:1fr;}}
+    .featured-left{position:relative;}
+    .featured-coll-img{width:100%;height:100%;min-height:260px;object-fit:cover;display:block;transition:transform 0.5s ease;}
+    .featured-card:hover .featured-coll-img{transform:scale(1.04);}
+    .featured-coll-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(26,10,0,0.85) 0%,transparent 55%);display:flex;flex-direction:column;justify-content:flex-end;padding:24px;}
+    .featured-coll-tribe{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:4px;}
+    .featured-coll-name{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--cream);font-weight:700;margin-bottom:4px;}
+    .featured-coll-tagline{font-family:'Cormorant Garamond',serif;font-size:0.88rem;color:rgba(250,243,232,0.6);line-height:1.5;}
+    .featured-right{padding:32px 36px;display:flex;flex-direction:column;justify-content:center;}
+    @media(max-width:700px){.featured-right{padding:24px;}}
+    .featured-product-img{width:100%;aspect-ratio:16/9;border-radius:6px;overflow:hidden;margin-bottom:22px;}
+    .featured-product-img img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
+    .featured-now-label{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+    .featured-product-name{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--cream);font-weight:700;margin-bottom:8px;}
+    .featured-product-desc{font-family:'Cormorant Garamond',serif;font-size:0.9rem;color:rgba(250,243,232,0.55);line-height:1.7;margin-bottom:18px;}
+    .featured-price{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold);margin-bottom:4px;}
+    .featured-price-note{font-family:'Cormorant Garamond',serif;font-size:0.82rem;color:rgba(250,243,232,0.3);margin-bottom:20px;}
+    .buy-btn{display:inline-block;padding:13px 32px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.28em;text-decoration:none;border-radius:2px;transition:all 0.3s;box-shadow:0 6px 24px rgba(200,151,42,0.3);}
     .buy-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(200,151,42,0.45);}
-    .test-badge{display:inline-block;margin-left:12px;font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.2em;color:rgba(250,243,232,0.3);vertical-align:middle;}
+    .test-badge{display:inline-block;margin-left:10px;font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.2em;color:rgba(250,243,232,0.25);vertical-align:middle;}
 
     .coming-strip{text-align:center;padding:20px 20px 64px;}
     .coming-strip p{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.3em;color:rgba(250,243,232,0.25);text-transform:uppercase;}
@@ -104,16 +107,29 @@
 <main class="collections-wrap">
   <div class="collections-grid">
 
-    <!-- Tripuri — Kubai -->
-    <div class="coll-card reveal">
-      <div class="coll-img">
-        <img src="/static/tripuri_kubai.jpg" alt="Kubai — Tripuri Men's Attire"/>
+    <!-- ── Kubai: FEATURED with product embedded ── -->
+    <div class="featured-card reveal">
+      <div class="featured-left">
+        <img src="/static/tripuri_kubai.jpg" alt="Kubai — Tripuri Men's Attire" class="featured-coll-img"/>
+        <div class="featured-coll-overlay">
+          <div class="featured-coll-tribe">Tripuri Collection</div>
+          <div class="featured-coll-name">Kubai</div>
+          <div class="featured-coll-tagline">Crimson and gold stripes carrying<br/>the weight of ancestry.</div>
+        </div>
       </div>
-      <div class="coll-info">
-        <div class="coll-tribe">Tripuri Collection</div>
-        <div class="coll-name">Kubai</div>
-        <div class="coll-tagline">The sacred handwoven shirt of the Tripuri man — crimson and gold stripes carrying the weight of ancestry.</div>
-        <a href="#" class="explore-btn">EXPLORE →</a>
+      <div class="featured-right">
+        <div class="featured-now-label">✦ &nbsp; Available Now &nbsp; ✦</div>
+        <div class="featured-product-img">
+          <img src="/static/kubai_test.jpg" alt="Kubai Heritage Shirt"/>
+        </div>
+        <div class="featured-product-name">Kubai Heritage Shirt</div>
+        <div class="featured-product-desc">A handwoven Kubai shirt in traditional crimson and gold stripes, crafted by Tripuri artisans on pit looms. Worn during ceremonies and festivals — now available year-round. Made to order, ships in 5–7 days.</div>
+        <div class="featured-price">₹ 1,299</div>
+        <div class="featured-price-note">Free shipping across India · Certificate of authenticity</div>
+        <div>
+          <a href="https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Heritage%20Shirt%20%28%E2%82%B91%2C299%29%20from%20Mwktai.%20Please%20confirm%20availability." target="_blank" class="buy-btn">BUY NOW — ₹1,299</a>
+          <span class="test-badge">[ TEST ]</span>
+        </div>
       </div>
     </div>
 
@@ -126,7 +142,7 @@
         <div class="coll-tribe">Reang Collection</div>
         <div class="coll-name">Kamsoi</div>
         <div class="coll-tagline">Bold, geometric weaves in deep earth tones — the Reang man's mark of identity and strength.</div>
-        <a href="#" class="explore-btn">EXPLORE →</a>
+        <span class="coming-label">Coming Soon</span>
       </div>
     </div>
 
@@ -139,7 +155,7 @@
         <div class="coll-tribe">Chakma Collection</div>
         <div class="coll-name">Jummosulum</div>
         <div class="coll-tagline">Intricate geometric patterns woven in silk-like cotton — the Chakma tradition of quiet, precise artistry.</div>
-        <a href="#" class="explore-btn">EXPLORE →</a>
+        <span class="coming-label">Coming Soon</span>
       </div>
     </div>
 
@@ -152,7 +168,7 @@
         <div class="coll-tribe">Jamatia Collection</div>
         <div class="coll-name">Tuti</div>
         <div class="coll-tagline">Worn during ceremony and celebration — the Tuti embodies the Jamatia spirit of community and reverence.</div>
-        <a href="#" class="explore-btn">EXPLORE →</a>
+        <span class="coming-label">Coming Soon</span>
       </div>
     </div>
 
@@ -163,38 +179,6 @@
   </div>
 </main>
 
-<!-- TEST PRODUCT -->
-<div class="tribal-bar"></div>
-<section class="products-section">
-  <div class="products-heading">
-    <p class="products-label reveal">✦ &nbsp; Featured Item &nbsp; ✦</p>
-    <h2 class="products-title reveal">Shop Now</h2>
-  </div>
-
-  <div class="product-card reveal">
-    <div class="product-img">
-      <img src="/static/kubai_test.jpg" alt="Kubai Heritage Shirt"/>
-    </div>
-    <div class="product-details">
-      <span class="product-badge">Tripuri Collection · Men's</span>
-      <h3 class="product-name">Kubai Heritage Shirt</h3>
-      <p class="product-desc">
-        A handwoven Kubai shirt in traditional crimson and gold stripes,
-        crafted by Tripuri artisans on pit looms in Agartala.
-        Worn during ceremonies and festivals — now available year-round.
-        Made to order, ships in 5–7 days.
-      </p>
-      <div class="product-price">₹ 1,299</div>
-      <div class="product-price-note">Free shipping across India · Certificate of authenticity included</div>
-      <a href="https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Heritage%20Shirt%20%28%E2%82%B91%2C299%29%20from%20Mwktai.%20Please%20confirm%20availability." target="_blank" class="buy-btn">
-        BUY NOW — ₹1,299
-      </a>
-      <span class="test-badge">[ TEST ITEM ]</span>
-    </div>
-  </div>
-</section>
-
-<div class="tribal-bar"></div>
 <footer>
   <div class="footer-brand">Mwktai</div>
   <p class="footer-tagline">WOVEN WITH HERITAGE · ADORNED WITH TRADITION · MADE WITH LOVE</p>
