@@ -8,7 +8,8 @@
   <style>
     :root{--gold:#C8972A;--deep:#1A0A00;--cream:#FAF3E8;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Cormorant Garamond',serif;background:var(--deep);color:var(--cream);min-height:100vh;display:flex;flex-direction:column;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Cormorant Garamond',serif;background:var(--deep);color:var(--cream);overflow-x:hidden;}
     .tribal-bar{height:6px;background:repeating-linear-gradient(90deg,#8B1A1A 0,#8B1A1A 12px,#C8972A 12px,#C8972A 24px,#1A0A00 24px,#1A0A00 36px,#C8972A 36px,#C8972A 48px);}
     .top-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:rgba(26,10,0,0.97);border-bottom:1px solid rgba(200,151,42,0.15);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
     .back-link{font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.2em;color:rgba(250,243,232,0.6);text-decoration:none;transition:color 0.3s;}
@@ -18,24 +19,45 @@
     .nav-links a{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.25em;color:rgba(250,243,232,0.4);text-decoration:none;transition:color 0.3s;}
     .nav-links a:hover,.nav-links a.active{color:var(--gold);}
     @media(max-width:640px){.top-nav{padding:14px 20px;}.nav-links{display:none;}}
-    main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;}
-    .icon{font-size:4rem;margin-bottom:24px;animation:fadeUp 0.8s ease both;}
-    .eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.4em;color:var(--gold);margin-bottom:16px;animation:fadeUp 0.8s 0.1s ease both;}
-    .title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:700;color:var(--cream);margin-bottom:16px;animation:fadeUp 0.8s 0.2s ease both;}
-    .subtitle{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:rgba(250,243,232,0.55);max-width:480px;line-height:1.8;margin-bottom:32px;animation:fadeUp 0.8s 0.3s ease both;}
-    .gold-bar{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 32px;animation:fadeUp 0.8s 0.35s ease both;}
-    .notify-btn{display:inline-block;padding:14px 36px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.28em;text-decoration:none;border-radius:2px;transition:all 0.3s;animation:fadeUp 0.8s 0.4s ease both;}
-    .notify-btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(200,151,42,0.35);}
-    footer{padding:40px 20px 24px;text-align:center;border-top:1px solid rgba(200,151,42,0.15);}
+
+    .page-hero{padding:64px 20px 56px;text-align:center;background:radial-gradient(ellipse at 50% 0%,#3d1a00 0%,#1A0A00 70%);border-bottom:1px solid rgba(200,151,42,0.2);}
+    .page-eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.4em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+    .page-title{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,3.8rem);font-weight:700;color:var(--cream);margin-bottom:14px;}
+    .page-subtitle{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:rgba(250,243,232,0.6);max-width:520px;margin:0 auto;line-height:1.8;}
+
+    .collections-wrap{max-width:1140px;margin:0 auto;padding:52px 24px 64px;}
+    .collections-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:32px;}
+    @media(max-width:700px){.collections-grid{grid-template-columns:1fr;}}
+
+    .coll-card{border-radius:8px;overflow:hidden;background:#1e0d00;border:1px solid rgba(200,151,42,0.12);transition:transform 0.4s,border-color 0.4s;cursor:pointer;}
+    .coll-card:hover{transform:translateY(-8px);border-color:rgba(200,151,42,0.45);}
+    .coll-img{width:100%;aspect-ratio:16/9;background:#1a0800;position:relative;overflow:hidden;}
+    .coll-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform 0.5s ease;}
+    .coll-card:hover .coll-img img{transform:scale(1.05);}
+    .coll-info{padding:24px 24px 28px;}
+    .coll-tribe{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+    .coll-name{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);font-weight:700;margin-bottom:6px;}
+    .coll-tagline{font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:rgba(250,243,232,0.5);line-height:1.6;margin-bottom:18px;}
+    .explore-btn{display:inline-block;padding:10px 26px;border:1px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.22em;text-decoration:none;border-radius:2px;transition:all 0.3s;}
+    .explore-btn:hover{background:var(--gold);color:var(--deep);}
+
+    .coming-strip{text-align:center;padding:20px 20px 64px;}
+    .coming-strip p{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.3em;color:rgba(250,243,232,0.25);text-transform:uppercase;}
+
+    footer{padding:44px 20px 28px;text-align:center;border-top:1px solid rgba(200,151,42,0.15);}
     .footer-brand{font-family:'Cinzel Decorative',serif;letter-spacing:0.06em;font-size:1.4rem;background:linear-gradient(135deg,#FAF3E8 20%,var(--gold) 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
-    .footer-nav{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:16px 0 10px;}
+    .footer-tagline{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.3em;color:rgba(250,243,232,0.25);margin-bottom:18px;}
+    .footer-nav{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:16px;}
     .footer-nav a{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.22em;color:rgba(250,243,232,0.3);text-decoration:none;transition:color 0.3s;}
     .footer-nav a:hover{color:var(--gold);}
     .footer-copy{font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(250,243,232,0.18);letter-spacing:0.2em;}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+
+    .reveal{opacity:0;transform:translateY(40px);transition:opacity 0.8s ease,transform 0.8s ease;}
+    .reveal.visible{opacity:1;transform:translateY(0);}
   </style>
 </head>
 <body>
+
 <div class="tribal-bar"></div>
 <nav class="top-nav">
   <a href="/" class="back-link">← HOME</a>
@@ -49,26 +71,98 @@
   </div>
 </nav>
 <div class="tribal-bar"></div>
-<main>
-  <div class="icon">🧥</div>
-  <p class="eyebrow">KUBAI COLLECTION</p>
-  <h1 class="title">Men's Wear</h1>
-  <p class="subtitle">Kubai tops woven in sacred crimson and gold, paired with the Rignai Dhoti — timeless Tripuri masculinity. Launching soon.</p>
-  <div class="gold-bar"></div>
-  <a href="/contact" class="notify-btn">NOTIFY ME WHEN LIVE</a>
+
+<header class="page-hero">
+  <p class="page-eyebrow">✦ &nbsp; Indigenous Handloom &nbsp; ✦</p>
+  <h1 class="page-title">Men's Wear</h1>
+  <p class="page-subtitle">From the Kubai to the Kamsoi — traditional attire worn by the men of Tripura's tribal communities, woven with purpose and pride.</p>
+</header>
+
+<div class="tribal-bar"></div>
+
+<main class="collections-wrap">
+  <div class="collections-grid">
+
+    <!-- Tripuri — Kubai -->
+    <div class="coll-card reveal">
+      <div class="coll-img">
+        <img src="/static/tripuri_kubai.jpg" alt="Kubai — Tripuri Men's Attire"/>
+      </div>
+      <div class="coll-info">
+        <div class="coll-tribe">Tripuri Collection</div>
+        <div class="coll-name">Kubai</div>
+        <div class="coll-tagline">The sacred handwoven shirt of the Tripuri man — crimson and gold stripes carrying the weight of ancestry.</div>
+        <a href="#" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+    <!-- Reang — Kamsoi -->
+    <div class="coll-card reveal" style="transition-delay:0.1s">
+      <div class="coll-img">
+        <img src="/static/reang_kamsoi.jpg" alt="Kamsoi — Reang Men's Attire"/>
+      </div>
+      <div class="coll-info">
+        <div class="coll-tribe">Reang Collection</div>
+        <div class="coll-name">Kamsoi</div>
+        <div class="coll-tagline">Bold, geometric weaves in deep earth tones — the Reang man's mark of identity and strength.</div>
+        <a href="#" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+    <!-- Chakma — Jummosulum -->
+    <div class="coll-card reveal" style="transition-delay:0.2s">
+      <div class="coll-img">
+        <img src="/static/chakma_jummosulum.jpg" alt="Jummosulum — Chakma Men's Attire"/>
+      </div>
+      <div class="coll-info">
+        <div class="coll-tribe">Chakma Collection</div>
+        <div class="coll-name">Jummosulum</div>
+        <div class="coll-tagline">Intricate geometric patterns woven in silk-like cotton — the Chakma tradition of quiet, precise artistry.</div>
+        <a href="#" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+    <!-- Jamatia — Tuti -->
+    <div class="coll-card reveal" style="transition-delay:0.3s">
+      <div class="coll-img">
+        <img src="/static/jamatia_tuti.jpg" alt="Tuti — Jamatia Men's Attire"/>
+      </div>
+      <div class="coll-info">
+        <div class="coll-tribe">Jamatia Collection</div>
+        <div class="coll-name">Tuti</div>
+        <div class="coll-tagline">Worn during ceremony and celebration — the Tuti embodies the Jamatia spirit of community and reverence.</div>
+        <a href="#" class="explore-btn">EXPLORE →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="coming-strip">
+    <p>✦ &nbsp; More collections coming soon &nbsp; ✦</p>
+  </div>
 </main>
+
 <div class="tribal-bar"></div>
 <footer>
   <div class="footer-brand">Mwktai</div>
+  <p class="footer-tagline">WOVEN WITH HERITAGE · ADORNED WITH TRADITION · MADE WITH LOVE</p>
   <div class="footer-nav">
     <a href="/womens-wear">Women's Wear</a>
     <a href="/mens-wear">Men's Wear</a>
     <a href="/jewellery">Jewellery</a>
     <a href="/home-decor">Home Décor</a>
+    <a href="/track-order">Track Order</a>
     <a href="/contact">Contact</a>
     <a href="/help">Help</a>
   </div>
   <p class="footer-copy">© 2025 MWKTAI · ALL RIGHTS RESERVED</p>
 </footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} });
+  },{threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
 </body>
 </html>
