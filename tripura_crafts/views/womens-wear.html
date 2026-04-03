@@ -39,9 +39,10 @@
     @media(max-width:900px){.collections-grid{grid-template-columns:repeat(2,1fr);}}
     @media(max-width:540px){.collections-grid{grid-template-columns:1fr;}}
 
-    /* ── Regular collection cards ── */
+    /* ── Collection cards ── */
     .coll-card{border-radius:8px;overflow:hidden;background:#1e0d00;border:1px solid rgba(200,151,42,0.12);transition:transform 0.4s,border-color 0.4s;cursor:pointer;}
     .coll-card:hover{transform:translateY(-8px);border-color:rgba(200,151,42,0.45);}
+    .coll-card.active{border-color:var(--gold);transform:translateY(-4px);}
     .coll-img{width:100%;aspect-ratio:16/9;background:#1a0800;position:relative;overflow:hidden;}
     .coll-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform 0.5s ease;}
     .coll-card:hover .coll-img img{transform:scale(1.05);}
@@ -49,32 +50,30 @@
     .coll-tribe{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
     .coll-name{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--cream);font-weight:700;margin-bottom:6px;}
     .coll-tagline{font-family:'Cormorant Garamond',serif;font-size:0.9rem;color:rgba(250,243,232,0.5);line-height:1.6;margin-bottom:16px;}
-    .explore-btn{display:inline-block;padding:9px 22px;border:1px solid rgba(200,151,42,0.35);color:rgba(200,151,42,0.5);font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.22em;text-decoration:none;border-radius:2px;cursor:default;}
+    .explore-btn{display:inline-block;padding:9px 22px;border:1px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.22em;border-radius:2px;transition:all 0.3s;}
+    .coll-card:hover .explore-btn,.coll-card.active .explore-btn{background:var(--gold);color:var(--deep);}
     .coming-label{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.2em;color:rgba(250,243,232,0.2);text-transform:uppercase;}
 
-    /* ── Featured product card (full-width, spans grid) ── */
-    .featured-card{grid-column:1/-1;border-radius:10px;overflow:hidden;background:#1e0d00;border:2px solid rgba(200,151,42,0.35);display:grid;grid-template-columns:1fr 1fr;transition:border-color 0.4s;}
-    .featured-card:hover{border-color:rgba(200,151,42,0.7);}
-    @media(max-width:700px){.featured-card{grid-template-columns:1fr;}}
-    .featured-left{position:relative;}
-    .featured-coll-img{width:100%;height:100%;min-height:260px;object-fit:cover;display:block;transition:transform 0.5s ease;}
-    .featured-card:hover .featured-coll-img{transform:scale(1.04);}
-    .featured-coll-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(26,10,0,0.85) 0%,transparent 55%);display:flex;flex-direction:column;justify-content:flex-end;padding:24px;}
-    .featured-coll-tribe{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:4px;}
-    .featured-coll-name{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--cream);font-weight:700;margin-bottom:4px;}
-    .featured-coll-tagline{font-family:'Cormorant Garamond',serif;font-size:0.88rem;color:rgba(250,243,232,0.6);line-height:1.5;}
-    .featured-right{padding:32px 36px;display:flex;flex-direction:column;justify-content:center;}
-    @media(max-width:700px){.featured-right{padding:24px;}}
-    .featured-product-img{width:100%;aspect-ratio:16/9;border-radius:6px;overflow:hidden;margin-bottom:22px;}
-    .featured-product-img img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
-    .featured-now-label{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
-    .featured-product-name{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--cream);font-weight:700;margin-bottom:8px;}
-    .featured-product-desc{font-family:'Cormorant Garamond',serif;font-size:0.9rem;color:rgba(250,243,232,0.55);line-height:1.7;margin-bottom:18px;}
-    .featured-price{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold);margin-bottom:4px;}
-    .featured-price-note{font-family:'Cormorant Garamond',serif;font-size:0.82rem;color:rgba(250,243,232,0.3);margin-bottom:20px;}
+    /* ── Product drawer (hidden until click) ── */
+    .product-drawer{grid-column:1/-1;max-height:0;overflow:hidden;transition:max-height 0.6s ease, opacity 0.4s ease;opacity:0;}
+    .product-drawer.open{max-height:600px;opacity:1;}
+    .drawer-inner{display:grid;grid-template-columns:1fr 1fr;gap:0;background:#1e0d00;border:1px solid rgba(200,151,42,0.35);border-radius:10px;overflow:hidden;margin-top:4px;}
+    @media(max-width:700px){.drawer-inner{grid-template-columns:1fr;}}
+    .drawer-img{width:100%;aspect-ratio:16/9;overflow:hidden;}
+    .drawer-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s;}
+    .drawer-inner:hover .drawer-img img{transform:scale(1.03);}
+    .drawer-details{padding:32px 36px;display:flex;flex-direction:column;justify-content:center;}
+    @media(max-width:700px){.drawer-details{padding:24px;}}
+    .drawer-badge{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+    .drawer-name{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--cream);font-weight:700;margin-bottom:8px;}
+    .drawer-desc{font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:rgba(250,243,232,0.55);line-height:1.75;margin-bottom:18px;}
+    .drawer-price{font-family:'Cinzel',serif;font-size:1.35rem;color:var(--gold);margin-bottom:4px;}
+    .drawer-price-note{font-family:'Cormorant Garamond',serif;font-size:0.82rem;color:rgba(250,243,232,0.3);margin-bottom:22px;}
     .buy-btn{display:inline-block;padding:13px 32px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.28em;text-decoration:none;border-radius:2px;transition:all 0.3s;box-shadow:0 6px 24px rgba(200,151,42,0.3);}
     .buy-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(200,151,42,0.45);}
     .test-badge{display:inline-block;margin-left:10px;font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.2em;color:rgba(250,243,232,0.25);vertical-align:middle;}
+    .coming-drawer{padding:32px;text-align:center;}
+    .coming-drawer p{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:rgba(250,243,232,0.35);font-style:italic;}
   </style>
 </head>
 <body>
@@ -106,86 +105,76 @@
 <main class="collections-wrap">
   <div class="collections-grid">
 
-    <!-- ── Risa Royale: FEATURED with product embedded ── -->
-    <div class="featured-card reveal">
-      <!-- Left: collection image with overlay -->
-      <div class="featured-left">
-        <img src="/static/risa.jpg" alt="Risa Royale — Tripuri Collection" class="featured-coll-img"/>
-        <div class="featured-coll-overlay">
-          <div class="featured-coll-tribe">Tripuri Collection</div>
-          <div class="featured-coll-name">Risa Royale</div>
-          <div class="featured-coll-tagline">The original. The iconic.<br/>Two thousand years on the loom.</div>
-        </div>
-      </div>
-      <!-- Right: product available now -->
-      <div class="featured-right">
-        <div class="featured-now-label">✦ &nbsp; Available Now &nbsp; ✦</div>
-        <div class="featured-product-img">
-          <img src="/static/risa_test.jpg" alt="Risa Heritage Set"/>
-        </div>
-        <div class="featured-product-name">Risa Heritage Set</div>
-        <div class="featured-product-desc">A full handwoven Risa &amp; Rignai set crafted on traditional pit looms by Tripuri artisans. Each piece is unique — no two weaves are identical. Made to order, ships in 5–7 days.</div>
-        <div class="featured-price">₹ 1,499</div>
-        <div class="featured-price-note">Free shipping across India · Certificate of authenticity</div>
-        <div>
-          <a href="https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Risa%20Heritage%20Set%20%28%E2%82%B91%2C499%29%20from%20Mwktai.%20Please%20confirm%20availability." target="_blank" class="buy-btn">BUY NOW — ₹1,499</a>
-          <span class="test-badge">[ TEST ]</span>
-        </div>
+    <!-- Risa Royale -->
+    <div class="coll-card reveal" onclick="openDrawer('risa')">
+      <div class="coll-img"><img src="/static/risa.jpg" alt="Risa Royale — Tripuri Collection"/></div>
+      <div class="coll-info">
+        <div class="coll-tribe">Tripuri Collection</div>
+        <div class="coll-name">Risa Royale</div>
+        <div class="coll-tagline">The original. The iconic. Two thousand years on the loom.</div>
+        <span class="explore-btn">SHOP THIS →</span>
       </div>
     </div>
 
     <!-- Stripe & Soul -->
-    <div class="coll-card reveal" style="transition-delay:0.08s">
+    <div class="coll-card reveal" style="transition-delay:0.08s" onclick="openDrawer('reang')">
       <div class="coll-img"><img src="/static/reang.jpg" alt="Stripe &amp; Soul — Reang Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Reang Collection</div>
         <div class="coll-name">Stripe &amp; Soul</div>
         <div class="coll-tagline">Bold stripes, ancient stories woven thread by thread.</div>
-        <span class="coming-label">Coming Soon</span>
+        <span class="explore-btn">EXPLORE →</span>
       </div>
     </div>
 
     <!-- Pinon Poetry -->
-    <div class="coll-card reveal" style="transition-delay:0.16s">
+    <div class="coll-card reveal" style="transition-delay:0.16s" onclick="openDrawer('pinon')">
       <div class="coll-img"><img src="/static/pinon.jpg" alt="Pinon Poetry — Chakma Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Chakma Collection</div>
         <div class="coll-name">Pinon Poetry</div>
         <div class="coll-tagline">Where geometry meets grace.</div>
-        <span class="coming-label">Coming Soon</span>
+        <span class="explore-btn">EXPLORE →</span>
+      </div>
+    </div>
+
+    <!-- Product drawer — sits inside the grid, spans all columns, opens below clicked card row -->
+    <div class="product-drawer" id="product-drawer">
+      <div class="drawer-inner" id="drawer-inner">
+        <!-- filled by JS -->
       </div>
     </div>
 
     <!-- Waichum Whispers -->
-    <div class="coll-card reveal" style="transition-delay:0.24s">
+    <div class="coll-card reveal" style="transition-delay:0.24s" onclick="openDrawer('jamatia')">
       <div class="coll-img"><img src="/static/jamatia.jpg" alt="Waichum Whispers — Jamatia Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Jamatia Collection</div>
         <div class="coll-name">Waichum Whispers</div>
         <div class="coll-tagline">Quiet elegance. Roots that run deep.</div>
-        <span class="coming-label">Coming Soon</span>
+        <span class="explore-btn">EXPLORE →</span>
       </div>
     </div>
 
     <!-- Sacred Threads -->
-    <div class="coll-card reveal" style="transition-delay:0.32s">
+    <div class="coll-card reveal" style="transition-delay:0.32s" onclick="openDrawer('mog')">
       <div class="coll-img"><img src="/static/mog.jpg" alt="Sacred Threads — Mog Collection"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Mog Collection</div>
         <div class="coll-name">Sacred Threads</div>
         <div class="coll-tagline">Woven with devotion, worn with pride.</div>
-        <span class="coming-label">Coming Soon</span>
+        <span class="explore-btn">EXPLORE →</span>
       </div>
     </div>
 
     <!-- The Hill Collective -->
-    <div class="coll-card reveal" style="transition-delay:0.40s">
+    <div class="coll-card reveal" style="transition-delay:0.40s" onclick="openDrawer('hill')">
       <div class="coll-img"><img src="/static/diff_tribe.jpg" alt="The Hill Collective — Multi-Tribe"/></div>
       <div class="coll-info">
         <div class="coll-tribe">Multi-Tribe</div>
         <div class="coll-name">The Hill Collective</div>
         <div class="coll-tagline">Many tribes. One living tradition.</div>
-        <span class="coming-label">Coming Soon</span>
+        <span class="explore-btn">EXPLORE →</span>
       </div>
     </div>
 
@@ -208,10 +197,74 @@
 </footer>
 
 <script>
+  // Reveal on scroll
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} });
   },{threshold:0.1});
   document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+  // Collection data
+  const collections = {
+    risa: {
+      img: '/static/risa_test.jpg',
+      badge: 'Tripuri Collection · Women\'s',
+      name: 'Risa Heritage Set',
+      desc: 'A full handwoven Risa &amp; Rignai set crafted on traditional pit looms by Tripuri artisans in Agartala. Each piece is unique — no two weaves are identical. Made to order, ships in 5–7 days.',
+      price: '₹ 1,499',
+      note: 'Free shipping across India · Certificate of authenticity included',
+      waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Risa%20Heritage%20Set%20%28%E2%82%B91%2C499%29%20from%20Mwktai.%20Please%20confirm%20availability.',
+      waLabel: 'BUY NOW — ₹1,499',
+      test: true
+    }
+  };
+
+  const comingSoon = `<div class="coming-drawer"><p>This collection is coming soon.<br/>Follow us to be notified when it drops.</p></div>`;
+
+  let activeKey = null;
+
+  function openDrawer(key) {
+    const drawer = document.getElementById('product-drawer');
+    const inner = document.getElementById('drawer-inner');
+    const cards = document.querySelectorAll('.coll-card');
+
+    // Deactivate all cards
+    cards.forEach(c => c.classList.remove('active'));
+
+    // If same card clicked again → close
+    if (activeKey === key) {
+      drawer.classList.remove('open');
+      activeKey = null;
+      return;
+    }
+
+    // Activate clicked card
+    const idx = ['risa','reang','pinon','jamatia','mog','hill'].indexOf(key);
+    if (idx >= 0) cards[idx >= 3 ? idx + 1 : idx].classList.add('active'); // +1 because drawer is at index 3 in DOM
+
+    activeKey = key;
+    const data = collections[key];
+
+    if (data) {
+      inner.innerHTML = `
+        <div class="drawer-img"><img src="${data.img}" alt="${data.name}"/></div>
+        <div class="drawer-details">
+          <div class="drawer-badge">${data.badge}</div>
+          <div class="drawer-name">${data.name}</div>
+          <div class="drawer-desc">${data.desc}</div>
+          <div class="drawer-price">${data.price}</div>
+          <div class="drawer-price-note">${data.note}</div>
+          <div>
+            <a href="${data.waLink}" target="_blank" class="buy-btn">${data.waLabel}</a>
+            ${data.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
+          </div>
+        </div>`;
+    } else {
+      inner.innerHTML = comingSoon;
+    }
+
+    drawer.classList.add('open');
+    setTimeout(() => drawer.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+  }
 </script>
 </body>
 </html>
