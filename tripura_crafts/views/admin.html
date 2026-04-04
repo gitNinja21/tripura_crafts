@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Mwktai</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--gold:#C8972A;--deep:#1A0A00;--cream:#FAF3E8;--green:#2a7a4b;--red:#8b1a1a;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Cormorant Garamond',serif;background:#0d0500;color:var(--cream);min-height:100vh;}
+    .top-bar{background:rgba(26,10,0,0.98);border-bottom:1px solid rgba(200,151,42,0.2);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .top-bar-brand{font-family:'Cinzel',serif;font-size:1rem;letter-spacing:0.2em;color:var(--gold);}
+    .top-bar-sub{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.3em;color:rgba(250,243,232,0.4);}
+    .top-bar a{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(250,243,232,0.4);text-decoration:none;}
+    .top-bar a:hover{color:var(--gold);}
+
+    .main{max-width:1200px;margin:0 auto;padding:36px 24px 80px;}
+
+    /* ── Tabs ── */
+    .tabs{display:flex;gap:4px;margin-bottom:32px;border-bottom:1px solid rgba(200,151,42,0.15);padding-bottom:0;}
+    .tab{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.25em;padding:10px 24px;cursor:pointer;color:rgba(250,243,232,0.35);border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px;}
+    .tab:hover{color:var(--cream);}
+    .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+    /* ── Section titles ── */
+    .section-title{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--cream);margin-bottom:6px;}
+    .section-sub{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.25em;color:rgba(250,243,232,0.3);margin-bottom:28px;}
+
+    /* ── Status filter ── */
+    .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+    .filter-btn{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.2em;padding:7px 18px;border:1px solid rgba(200,151,42,0.25);background:transparent;color:rgba(250,243,232,0.4);border-radius:2px;cursor:pointer;transition:all 0.2s;}
+    .filter-btn:hover,.filter-btn.active{border-color:var(--gold);color:var(--gold);}
+
+    /* ── Orders table ── */
+    .orders-table{width:100%;border-collapse:collapse;}
+    .orders-table th{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.25em;color:rgba(200,151,42,0.6);text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:1px solid rgba(200,151,42,0.12);}
+    .orders-table td{padding:14px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.95rem;vertical-align:middle;}
+    .orders-table tr:hover td{background:rgba(200,151,42,0.03);}
+
+    .status-pill{display:inline-block;font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.18em;padding:4px 12px;border-radius:20px;text-transform:uppercase;}
+    .status-received{background:rgba(200,151,42,0.12);color:var(--gold);}
+    .status-confirmed{background:rgba(42,122,75,0.15);color:#4caf80;}
+    .status-shipped{background:rgba(42,90,200,0.15);color:#7799ee;}
+    .status-delivered{background:rgba(100,100,100,0.15);color:rgba(250,243,232,0.4);}
+
+    .action-btn{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.15em;padding:5px 14px;border:1px solid rgba(200,151,42,0.3);background:transparent;color:var(--gold);border-radius:2px;cursor:pointer;transition:all 0.2s;margin-right:6px;}
+    .action-btn:hover{background:var(--gold);color:var(--deep);}
+    .action-btn.danger{border-color:rgba(139,26,26,0.4);color:#cc5555;}
+    .action-btn.danger:hover{background:#8b1a1a;color:var(--cream);}
+
+    /* ── Inventory table ── */
+    .inv-table{width:100%;border-collapse:collapse;}
+    .inv-table th{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.25em;color:rgba(200,151,42,0.6);padding:10px 14px;text-align:left;border-bottom:1px solid rgba(200,151,42,0.12);}
+    .inv-table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.95rem;vertical-align:middle;}
+    .inv-table tr:hover td{background:rgba(200,151,42,0.03);}
+    .stock-input{width:70px;background:rgba(255,255,255,0.05);border:1px solid rgba(200,151,42,0.2);color:var(--cream);font-family:'Cinzel',serif;font-size:0.8rem;padding:5px 10px;border-radius:2px;text-align:center;}
+    .stock-input:focus{outline:none;border-color:var(--gold);}
+    .low-stock{color:#e07040;}
+    .out-stock{color:#cc5555;}
+
+    .pane{display:none;}
+    .pane.active{display:block;}
+
+    .empty-state{text-align:center;padding:60px 20px;color:rgba(250,243,232,0.25);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;}
+
+    /* ── Modal ── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
+    .modal-bg.open{display:flex;}
+    .modal{background:#1a0a00;border:1px solid rgba(200,151,42,0.35);border-radius:8px;padding:32px;width:100%;max-width:460px;}
+    .modal h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--cream);margin-bottom:20px;}
+    .modal label{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.2em;color:rgba(200,151,42,0.7);display:block;margin-bottom:6px;margin-top:14px;}
+    .modal input,.modal textarea,.modal select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(200,151,42,0.2);color:var(--cream);font-family:'Cormorant Garamond',serif;font-size:1rem;padding:9px 12px;border-radius:2px;}
+    .modal input:focus,.modal textarea:focus,.modal select:focus{outline:none;border-color:var(--gold);}
+    .modal-actions{display:flex;gap:10px;margin-top:22px;justify-content:flex-end;}
+    .btn-primary{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;padding:10px 24px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);border:none;border-radius:2px;cursor:pointer;}
+    .btn-cancel{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;padding:10px 24px;background:transparent;border:1px solid rgba(200,151,42,0.3);color:rgba(250,243,232,0.5);border-radius:2px;cursor:pointer;}
+
+    .summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px;}
+    .summary-card{background:#1e0d00;border:1px solid rgba(200,151,42,0.12);border-radius:8px;padding:20px 24px;}
+    .summary-num{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold);margin-bottom:4px;}
+    .summary-label{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.25em;color:rgba(250,243,232,0.3);}
+    @media(max-width:700px){.summary-row{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <div class="top-bar-brand">Mwktai</div>
+    <div class="top-bar-sub">ADMIN DASHBOARD</div>
+  </div>
+  <a href="/">← Back to site</a>
+</div>
+
+<div class="main">
+
+  <!-- Summary cards -->
+  <div class="summary-row" id="summary-row">
+    <div class="summary-card"><div class="summary-num" id="s-total">—</div><div class="summary-label">Total Orders</div></div>
+    <div class="summary-card"><div class="summary-num" id="s-received">—</div><div class="summary-label">Received</div></div>
+    <div class="summary-card"><div class="summary-num" id="s-shipped">—</div><div class="summary-label">Shipped</div></div>
+    <div class="summary-card"><div class="summary-num" id="s-revenue">—</div><div class="summary-label">Revenue (₹)</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('orders')">Orders</div>
+    <div class="tab" onclick="switchTab('inventory')">Inventory</div>
+  </div>
+
+  <!-- ── Orders pane ── -->
+  <div class="pane active" id="pane-orders">
+    <h2 class="section-title">All Orders</h2>
+    <p class="section-sub">Click a status button to advance the order</p>
+
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="filterOrders(null, this)">All</button>
+      <button class="filter-btn" onclick="filterOrders('received', this)">Received</button>
+      <button class="filter-btn" onclick="filterOrders('confirmed', this)">Confirmed</button>
+      <button class="filter-btn" onclick="filterOrders('shipped', this)">Shipped</button>
+      <button class="filter-btn" onclick="filterOrders('delivered', this)">Delivered</button>
+    </div>
+
+    <div id="orders-container"></div>
+  </div>
+
+  <!-- ── Inventory pane ── -->
+  <div class="pane" id="pane-inventory">
+    <h2 class="section-title">Inventory</h2>
+    <p class="section-sub">Update stock counts — changes save instantly</p>
+    <div id="inventory-container"></div>
+  </div>
+
+</div>
+
+<!-- Ship modal -->
+<div class="modal-bg" id="ship-modal">
+  <div class="modal">
+    <h3>Mark as Shipped</h3>
+    <input type="hidden" id="ship-order-id"/>
+    <label>Tracking Number</label>
+    <input type="text" id="ship-tracking" placeholder="e.g. SR1234567890IN"/>
+    <label>Notes (optional)</label>
+    <textarea id="ship-notes" rows="2" placeholder="Courier name, expected delivery..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmShip()">Confirm Shipped</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allOrders = [];
+  let activeFilter = null;
+
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t,i) => {
+      t.classList.toggle('active', ['orders','inventory'][i] === name);
+    });
+    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+    document.getElementById('pane-' + name).classList.add('active');
+    if (name === 'inventory') loadInventory();
+  }
+
+  // ── Orders ────────────────────────────────────────────────────────────────
+  async function loadOrders() {
+    const res = await fetch('/api/orders');
+    allOrders = await res.json();
+    updateSummary();
+    renderOrders(allOrders);
+  }
+
+  function updateSummary() {
+    document.getElementById('s-total').textContent = allOrders.length;
+    document.getElementById('s-received').textContent = allOrders.filter(o => o.status === 'received').length;
+    document.getElementById('s-shipped').textContent = allOrders.filter(o => o.status === 'shipped').length;
+    const revenue = allOrders.filter(o => o.status !== 'received').reduce((s, o) => s + Number(o.price_paid), 0);
+    document.getElementById('s-revenue').textContent = '₹' + revenue.toLocaleString('en-IN');
+  }
+
+  function filterOrders(status, btn) {
+    activeFilter = status;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filtered = status ? allOrders.filter(o => o.status === status) : allOrders;
+    renderOrders(filtered);
+  }
+
+  function renderOrders(orders) {
+    const el = document.getElementById('orders-container');
+    if (!orders.length) { el.innerHTML = '<div class="empty-state">No orders found.</div>'; return; }
+    el.innerHTML = `
+      <table class="orders-table">
+        <thead><tr>
+          <th>#</th><th>Customer</th><th>Product</th><th>Size</th>
+          <th>Amount</th><th>Status</th><th>Date</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+          ${orders.map(o => `
+            <tr>
+              <td style="color:rgba(200,151,42,0.5);font-family:'Cinzel',serif;font-size:0.75rem">#${o.id}</td>
+              <td>
+                <div style="font-weight:600">${o.customer_name}</div>
+                <div style="font-size:0.85rem;color:rgba(250,243,232,0.4)">${o.customer_phone}</div>
+              </td>
+              <td>
+                <div>${o.product_name || '—'}</div>
+                <div style="font-size:0.8rem;color:rgba(200,151,42,0.5);font-family:'Cinzel',serif;letter-spacing:0.1em">${o.collection || ''}</div>
+              </td>
+              <td style="font-family:'Cinzel',serif;font-size:0.8rem">${o.size || '—'}</td>
+              <td style="font-family:'Cinzel',serif;color:var(--gold)">₹${Number(o.price_paid).toLocaleString('en-IN')}</td>
+              <td><span class="status-pill status-${o.status}">${o.status}</span></td>
+              <td style="font-size:0.85rem;color:rgba(250,243,232,0.35)">${new Date(o.ordered_at).toLocaleDateString('en-IN')}</td>
+              <td>${actionButtons(o)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function actionButtons(o) {
+    if (o.status === 'received')  return `<button class="action-btn" onclick="advanceStatus(${o.id},'confirmed')">Confirm</button>`;
+    if (o.status === 'confirmed') return `<button class="action-btn" onclick="openShipModal(${o.id})">Mark Shipped</button>`;
+    if (o.status === 'shipped')   return `<button class="action-btn" onclick="advanceStatus(${o.id},'delivered')">Mark Delivered</button>`;
+    return '<span style="font-size:0.8rem;color:rgba(250,243,232,0.2);font-family:Cinzel,serif;letter-spacing:0.1em">Done</span>';
+  }
+
+  async function advanceStatus(id, status) {
+    await fetch(`/api/orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    loadOrders();
+  }
+
+  // ── Ship modal ─────────────────────────────────────────────────────────────
+  function openShipModal(id) {
+    document.getElementById('ship-order-id').value = id;
+    document.getElementById('ship-tracking').value = '';
+    document.getElementById('ship-notes').value = '';
+    document.getElementById('ship-modal').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('ship-modal').classList.remove('open');
+  }
+  async function confirmShip() {
+    const id       = document.getElementById('ship-order-id').value;
+    const tracking = document.getElementById('ship-tracking').value;
+    const notes    = document.getElementById('ship-notes').value;
+    await fetch(`/api/orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'shipped', tracking_number: tracking, notes })
+    });
+    closeModal();
+    loadOrders();
+  }
+
+  // ── Inventory ─────────────────────────────────────────────────────────────
+  async function loadInventory() {
+    const res = await fetch('/api/products');
+    const products = await res.json();
+    const el = document.getElementById('inventory-container');
+    if (!products.length) { el.innerHTML = '<div class="empty-state">No products found.</div>'; return; }
+    el.innerHTML = `
+      <table class="inv-table">
+        <thead><tr>
+          <th>#</th><th>Collection</th><th>Product</th><th>Size</th><th>Price</th><th>Stock</th><th>Save</th>
+        </tr></thead>
+        <tbody>
+          ${products.map(p => {
+            const stockClass = p.stock === 0 ? 'out-stock' : p.stock <= 3 ? 'low-stock' : '';
+            return `
+            <tr>
+              <td style="color:rgba(200,151,42,0.4);font-family:'Cinzel',serif;font-size:0.7rem">${p.id}</td>
+              <td style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;color:var(--gold)">${p.collection}</td>
+              <td>${p.name}</td>
+              <td style="font-family:'Cinzel',serif;font-size:0.8rem">${p.size || '—'}</td>
+              <td style="font-family:'Cinzel',serif;color:var(--gold)">₹${Number(p.price).toLocaleString('en-IN')}</td>
+              <td><input class="stock-input ${stockClass}" type="number" min="0" value="${p.stock}" id="stock-${p.id}"/></td>
+              <td><button class="action-btn" onclick="saveStock(${p.id})">Save</button></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function saveStock(id) {
+    const stock = parseInt(document.getElementById('stock-' + id).value);
+    await fetch(`/api/products/${id}/stock`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock })
+    });
+    loadInventory();
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadOrders();
+</script>
+</body>
+</html>
