@@ -615,17 +615,28 @@
     }
 
     .founder-inner {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1fr 1.6fr;
-      gap: 80px;
-      align-items: center;
+      grid-template-columns: 1fr 1fr 1.5fr;
+      gap: 48px;
+      align-items: start;
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 960px) {
+      .founder-inner { grid-template-columns: 1fr 1fr; gap: 40px; }
+    }
+    @media (max-width: 600px) {
       .founder-inner { grid-template-columns: 1fr; gap: 48px; }
     }
+
+    .founder-divider-vert {
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(200,151,42,0.3), transparent);
+      align-self: stretch;
+      display: block;
+    }
+    @media (max-width: 960px) { .founder-divider-vert { display: none; } }
 
     .founder-avatar {
       width: 90px;
@@ -913,6 +924,7 @@
   <section class="founder-section">
     <div class="founder-inner">
 
+      <!-- Arghya -->
       <div class="founder-left reveal">
         <div class="founder-avatar">A</div>
         <div class="founder-badge-row">
@@ -930,7 +942,27 @@
         </p>
       </div>
 
-      <div class="founder-right reveal" style="transition-delay:0.2s">
+      <!-- Jeniyan -->
+      <div class="founder-left reveal" style="transition-delay:0.15s">
+        <div class="founder-avatar">J</div>
+        <div class="founder-badge-row">
+          <span class="founder-badge">✦ CO-FOUNDER</span>
+        </div>
+        <h3 class="founder-name">Jeniyan</h3>
+        <p class="founder-role">Co-Founder, Mwktai</p>
+        <div class="founder-divider"></div>
+        <p class="founder-bio">
+          I believe that the soul of Tripura lies in the rhythm of the loom
+          and the whisper of bamboo groves. Our vision is to transform the
+          indigenous artistry of our nineteen tribes from a local treasure
+          into a global lifestyle. We are not just selling products — we are
+          preserving a heartbeat. Every weave and every carving is a piece of
+          Tripura's history, remembering our home.
+        </p>
+      </div>
+
+      <!-- Vision -->
+      <div class="founder-right reveal" style="transition-delay:0.3s">
         <p class="vision-label">✦ &nbsp; THE VISION &nbsp; ✦</p>
         <h2 class="vision-title">We don't just sell cloth.<br/>We sell memory.</h2>
         <p class="vision-body">
