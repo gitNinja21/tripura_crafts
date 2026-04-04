@@ -166,10 +166,17 @@
 
   // ── Orders ────────────────────────────────────────────────────────────────
   async function loadOrders() {
-    const res = await fetch('/api/orders');
-    allOrders = await res.json();
-    updateSummary();
-    renderOrders(allOrders);
+    const container = document.getElementById('orders-container');
+    container.innerHTML = '<div class="empty-state">Loading...</div>';
+    try {
+      const res = await fetch('/api/orders');
+      if (!res.ok) throw new Error('DB not ready');
+      allOrders = await res.json();
+      updateSummary();
+      renderOrders(allOrders);
+    } catch (err) {
+      container.innerHTML = '<div class="empty-state">⚠️ Database not connected yet.<br/>Add PostgreSQL on Railway and redeploy.</div>';
+    }
   }
 
   function updateSummary() {
