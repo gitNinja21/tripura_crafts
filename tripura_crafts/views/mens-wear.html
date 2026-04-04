@@ -59,7 +59,11 @@
     .pcard-body{padding:14px 16px 18px;}
     .pcard-name{font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);font-weight:700;margin-bottom:4px;}
     .pcard-desc{font-family:'Cormorant Garamond',serif;font-size:0.82rem;color:rgba(250,243,232,0.45);line-height:1.6;margin-bottom:12px;}
-    .pcard-price{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold);margin-bottom:12px;}
+    .pcard-price{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold);margin-bottom:10px;}
+    .size-row{display:flex;gap:8px;margin-bottom:14px;}
+    .size-btn{width:36px;height:36px;border:1px solid rgba(200,151,42,0.35);background:transparent;color:rgba(250,243,232,0.55);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;border-radius:3px;cursor:pointer;transition:all 0.2s;}
+    .size-btn:hover{border-color:var(--gold);color:var(--gold);}
+    .size-btn.selected{background:var(--gold);color:var(--deep);border-color:var(--gold);}
     .buy-btn{display:inline-block;padding:10px 22px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.25em;text-decoration:none;border-radius:2px;transition:all 0.3s;box-shadow:0 4px 16px rgba(200,151,42,0.25);}
     .buy-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,151,42,0.4);}
     .test-badge{display:inline-block;margin-left:8px;font-family:'Cinzel',serif;font-size:0.45rem;letter-spacing:0.2em;color:rgba(250,243,232,0.2);vertical-align:middle;}
@@ -202,7 +206,8 @@
           name: 'Kubai Heritage Shirt',
           desc: 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.',
           price: '₹ 1,299',
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Heritage%20Shirt%20%28%E2%82%B91%2C299%29%20from%20Mwktai.',
+          sizes: ['S','M','L'],
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Heritage%20Shirt%20%28%E2%82%B91%2C299%29%20-%20Size%3A%20',
           test: true
         },
         {
@@ -210,7 +215,8 @@
           name: 'Kubai Everyday',
           desc: 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.',
           price: '₹ 849',
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Everyday%20%28%E2%82%B9849%29%20from%20Mwktai.',
+          sizes: ['S','M','L'],
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Everyday%20%28%E2%82%B9849%29%20-%20Size%3A%20',
           test: true
         },
         {
@@ -218,7 +224,8 @@
           name: 'Kubai Ceremonial',
           desc: 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.',
           price: '₹ 2,099',
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Ceremonial%20%28%E2%82%B92%2C099%29%20from%20Mwktai.',
+          sizes: ['S','M','L'],
+          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Ceremonial%20%28%E2%82%B92%2C099%29%20-%20Size%3A%20',
           test: true
         }
       ]
@@ -314,6 +321,19 @@
 
   const comingSoon = `<div class="coming-drawer"><p>Products from this collection are coming soon.</p></div>`;
 
+  function selectSize(btn, cardId) {
+    // Highlight selected size button
+    const row = btn.closest('.size-row');
+    row.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    // Update the Buy Now link to include the selected size
+    const card = btn.closest('.pcard');
+    const base = card.dataset.waBase;
+    const size = btn.textContent;
+    const buyBtn = card.querySelector('.buy-btn');
+    buyBtn.href = base + encodeURIComponent(size) + '%20-%20from%20Mwktai.';
+  }
+
   let activeKey = null;
 
   function openDrawer(key) {
@@ -338,17 +358,27 @@
     const coll = collections[key];
 
     if (coll) {
-      const cards_html = coll.items.map(p => `
-        <div class="pcard">
+      const cards_html = coll.items.map((p, pi) => {
+        const sizeHtml = p.sizes ? `
+          <div class="size-row">
+            ${p.sizes.map(s => `<button class="size-btn" onclick="selectSize(this,'card-${pi}')">${s}</button>`).join('')}
+          </div>` : '';
+        const buyHtml = p.sizes
+          ? `<a id="buy-card-${pi}" href="${p.waLink}S%20-%20from%20Mwktai." target="_blank" class="buy-btn">BUY NOW</a>`
+          : `<a href="${p.waLink}" target="_blank" class="buy-btn">BUY NOW</a>`;
+        return `
+        <div class="pcard" data-card-id="card-${pi}" data-wa-base="${p.waLink}">
           <div class="pcard-img"><img src="${p.img}" alt="${p.name}"/></div>
           <div class="pcard-body">
             <div class="pcard-name">${p.name}</div>
             <div class="pcard-desc">${p.desc}</div>
             <div class="pcard-price">${p.price}</div>
-            <a href="${p.waLink}" target="_blank" class="buy-btn">BUY NOW</a>
+            ${sizeHtml}
+            ${buyHtml}
             ${p.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       inner.innerHTML = `
         <div class="drawer-heading">✦ &nbsp; ${coll.label} &nbsp; ✦</div>
         <div class="drawer-grid">${cards_html}</div>`;
