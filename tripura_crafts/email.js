@@ -13,7 +13,7 @@ async function notifyAdmin(order) {
   const sizeText = order.size ? ` — Size ${order.size}` : '';
   await transporter.sendMail({
     from: `"Mwktai Orders" <${process.env.GMAIL_USER}>`,
-    to:   'arghya.ghosh13@gmail.com',
+    to:   'mwktaitripura@gmail.com',
     subject: `🛍 New Order #${order.id} — ${order.product_name}`,
     html: `
       <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a0a00;color:#FAF3E8;padding:36px;border-radius:8px;">
@@ -43,7 +43,7 @@ async function notifyAdmin(order) {
 
 // ── Email to CUSTOMER when order is confirmed ─────────────────────────────
 async function notifyCustomerConfirmed(order) {
-  if (!order.customer_phone) return; // no email address, skip
+  if (!order.customer_email) return; // no email address, skip
   const sizeText = order.size ? ` (Size ${order.size})` : '';
   await transporter.sendMail({
     from:    `"Mwktai" <${process.env.GMAIL_USER}>`,
