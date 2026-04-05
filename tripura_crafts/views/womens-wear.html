@@ -76,6 +76,24 @@
     .test-badge{display:inline-block;margin-left:8px;font-family:'Cinzel',serif;font-size:0.45rem;letter-spacing:0.2em;color:rgba(250,243,232,0.2);vertical-align:middle;}
     .coming-drawer{padding:40px;text-align:center;}
     .coming-drawer p{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:rgba(250,243,232,0.35);font-style:italic;}
+
+    /* ── Order Modal ── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;padding:20px;}
+    .modal-bg.open{display:flex;}
+    .modal-box{background:#1a0a00;border:1px solid rgba(200,151,42,0.4);border-radius:10px;padding:36px 32px;width:100%;max-width:420px;position:relative;}
+    .modal-close{position:absolute;top:14px;right:18px;background:none;border:none;color:rgba(250,243,232,0.3);font-size:1.2rem;cursor:pointer;line-height:1;}
+    .modal-close:hover{color:var(--gold);}
+    .modal-eyebrow{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.38em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+    .modal-product-name{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);font-weight:700;margin-bottom:4px;}
+    .modal-price{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);margin-bottom:20px;}
+    .modal-divider{height:1px;background:rgba(200,151,42,0.15);margin-bottom:20px;}
+    .modal-label{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.22em;color:rgba(200,151,42,0.7);display:block;margin-bottom:6px;margin-top:14px;}
+    .modal-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(200,151,42,0.2);color:var(--cream);font-family:'Cormorant Garamond',serif;font-size:1rem;padding:10px 13px;border-radius:3px;transition:border-color 0.2s;}
+    .modal-input:focus{outline:none;border-color:var(--gold);}
+    .modal-submit{width:100%;margin-top:22px;padding:14px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.28em;border:none;border-radius:3px;cursor:pointer;transition:all 0.3s;box-shadow:0 6px 20px rgba(200,151,42,0.3);}
+    .modal-submit:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(200,151,42,0.4);}
+    .modal-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+    .modal-note{font-family:'Cormorant Garamond',serif;font-size:0.82rem;color:rgba(250,243,232,0.3);text-align:center;margin-top:12px;line-height:1.5;}
   </style>
 </head>
 <body>
@@ -198,6 +216,27 @@
   <p class="footer-copy">© 2025 MWKTAI · ALL RIGHTS RESERVED</p>
 </footer>
 
+<!-- Order Modal -->
+<div class="modal-bg" id="order-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeOrderModal()">✕</button>
+    <div class="modal-eyebrow">✦ &nbsp; Place Your Order &nbsp; ✦</div>
+    <div class="modal-product-name" id="modal-product-name"></div>
+    <div class="modal-price" id="modal-price"></div>
+    <div class="modal-divider"></div>
+    <label class="modal-label">Your Name</label>
+    <input class="modal-input" id="order-name" type="text" placeholder="Full name"/>
+    <label class="modal-label">WhatsApp Number</label>
+    <input class="modal-input" id="order-phone" type="tel" placeholder="10-digit mobile number"/>
+    <label class="modal-label">Delivery Address</label>
+    <input class="modal-input" id="order-address" type="text" placeholder="House, Street, City, PIN"/>
+    <button class="modal-submit" id="order-submit" onclick="submitOrder()">
+      CONFIRM &amp; ORDER ON WHATSAPP
+    </button>
+    <p class="modal-note">We'll confirm your order on WhatsApp within a few hours.<br/>Free shipping across India.</p>
+  </div>
+</div>
+
 <script>
   // Reveal on scroll
   const obs = new IntersectionObserver(entries => {
@@ -276,7 +315,7 @@
             <div class="pcard-name">${p.name}</div>
             <div class="pcard-desc">${p.desc}</div>
             <div class="pcard-price">${p.price}</div>
-            <a href="${p.waLink}" target="_blank" class="buy-btn">BUY NOW</a>
+            <button class="buy-btn" onclick="openOrderModal('${p.name.replace(/'/g,"\\'")}', '${p.price}', null)">BUY NOW</button>
             ${p.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
           </div>
         </div>`).join('');
@@ -290,6 +329,85 @@
     drawer.classList.add('open');
     setTimeout(() => drawer.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
   }
+
+  // ── Order Modal ───────────────────────────────────────────────────────────
+  let pendingOrder = {};
+
+  function openOrderModal(name, price, size) {
+    pendingOrder = { name, price, size };
+    document.getElementById('modal-product-name').textContent = name;
+    document.getElementById('modal-price').textContent = price;
+    document.getElementById('order-name').value = '';
+    document.getElementById('order-phone').value = '';
+    document.getElementById('order-address').value = '';
+    document.getElementById('order-submit').disabled = false;
+    document.getElementById('order-submit').textContent = 'CONFIRM & ORDER ON WHATSAPP';
+    document.getElementById('order-modal').classList.add('open');
+  }
+
+  function closeOrderModal() {
+    document.getElementById('order-modal').classList.remove('open');
+  }
+
+  async function submitOrder() {
+    const customerName    = document.getElementById('order-name').value.trim();
+    const customerPhone   = document.getElementById('order-phone').value.trim();
+    const customerAddress = document.getElementById('order-address').value.trim();
+
+    if (!customerName || !customerPhone || !customerAddress) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    const btn = document.getElementById('order-submit');
+    btn.disabled = true;
+    btn.textContent = 'Saving order...';
+
+    // Find product_id from DB
+    try {
+      const products = await fetch('/api/products?gender=womens').then(r => r.json());
+      const product = products.find(p =>
+        p.name === pendingOrder.name &&
+        (pendingOrder.size ? p.size === pendingOrder.size : true)
+      );
+
+      const orderData = {
+        product_id:       product ? product.id : null,
+        customer_name:    customerName,
+        customer_phone:   customerPhone,
+        customer_address: customerAddress,
+        size:             pendingOrder.size || null,
+        quantity:         1,
+        price_paid:       parseInt(pendingOrder.price.replace(/[^\d]/g, ''))
+      };
+
+      await fetch('/api/orders', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(orderData)
+      });
+    } catch(e) {
+      console.log('DB save failed, continuing to WhatsApp:', e);
+    }
+
+    // Open WhatsApp regardless
+    const sizeText = pendingOrder.size ? `\nSize: ${pendingOrder.size}` : '';
+    const msg = encodeURIComponent(
+      `Hi, I'd like to order from Mwktai!\n\n` +
+      `Product: ${pendingOrder.name}\n` +
+      `Price: ${pendingOrder.price}${sizeText}\n\n` +
+      `Name: ${customerName}\n` +
+      `Phone: ${customerPhone}\n` +
+      `Address: ${customerAddress}`
+    );
+    window.open(`https://wa.me/918119020093?text=${msg}`, '_blank');
+    closeOrderModal();
+  }
+
+  // Close modal on background click
+  document.getElementById('order-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeOrderModal();
+  });
 </script>
 </body>
 </html>
