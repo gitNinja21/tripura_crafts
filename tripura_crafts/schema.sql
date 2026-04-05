@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS orders (
   product_id       INTEGER      REFERENCES products(id),
   customer_name    VARCHAR(100) NOT NULL,
   customer_phone   VARCHAR(20)  NOT NULL,
+  customer_email   VARCHAR(150),
   customer_address TEXT         NOT NULL,
   size             VARCHAR(5),               -- size ordered
   quantity         INTEGER      NOT NULL DEFAULT 1,

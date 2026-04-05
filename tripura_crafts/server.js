@@ -2,6 +2,7 @@ const express = require('express');
 const path    = require('path');
 const fs      = require('fs');
 const pool    = require('./db');
+const { notifyAdmin, notifyCustomerConfirmed, notifyCustomerShipped } = require('./email');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -92,26 +93,30 @@ app.patch('/api/products/:id/stock', async (req, res) => {
 // POST /api/orders — create a new order
 app.post('/api/orders', async (req, res) => {
   try {
-    const { product_id, customer_name, customer_phone,
-            customer_address, size, quantity, price_paid } = req.body;
+    const { product_id, product_name, customer_name, customer_phone,
+            customer_email, customer_address, size, quantity, price_paid } = req.body;
 
     const result = await pool.query(
       `INSERT INTO orders
-         (product_id, customer_name, customer_phone, customer_address,
-          size, quantity, price_paid, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'received')
+         (product_id, customer_name, customer_phone, customer_email,
+          customer_address, size, quantity, price_paid, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'received')
        RETURNING *`,
-      [product_id, customer_name, customer_phone,
+      [product_id, customer_name, customer_phone, customer_email,
        customer_address, size, quantity || 1, price_paid]
     );
 
-    // Reduce stock by quantity
+    // Reduce stock
     if (product_id) {
       await pool.query(
         'UPDATE products SET stock = stock - $1 WHERE id = $2',
         [quantity || 1, product_id]
       );
     }
+
+    // Email admin
+    notifyAdmin({ ...result.rows[0], product_name })
+      .catch(e => console.error('Admin email failed:', e));
 
     res.status(201).json({ success: true, order_id: result.rows[0].id });
   } catch (err) {
@@ -151,7 +156,23 @@ app.patch('/api/orders/:id', async (req, res) => {
        RETURNING *`,
       [status, tracking_number, notes, req.params.id]
     );
-    res.json(result.rows[0]);
+    const order = result.rows[0];
+
+    // Fetch product name for email
+    if (order.product_id) {
+      const p = await pool.query('SELECT name FROM products WHERE id = $1', [order.product_id]);
+      if (p.rows.length) order.product_name = p.rows[0].name;
+    }
+
+    // Send customer email on status change
+    if (status === 'confirmed') {
+      notifyCustomerConfirmed(order).catch(e => console.error('Confirm email failed:', e));
+    }
+    if (status === 'shipped') {
+      notifyCustomerShipped(order).catch(e => console.error('Shipped email failed:', e));
+    }
+
+    res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
