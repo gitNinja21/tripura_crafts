@@ -106,12 +106,14 @@ app.post('/api/orders', async (req, res) => {
     );
 
     // Reduce stock by quantity
-    await pool.query(
-      'UPDATE products SET stock = stock - $1 WHERE id = $2',
-      [quantity || 1, product_id]
-    );
+    if (product_id) {
+      await pool.query(
+        'UPDATE products SET stock = stock - $1 WHERE id = $2',
+        [quantity || 1, product_id]
+      );
+    }
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({ success: true, order_id: result.rows[0].id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
