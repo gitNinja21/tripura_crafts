@@ -3,10 +3,11 @@ const https = require('https');
 
 // ── SMS to CUSTOMER via Fast2SMS ──────────────────────────────────────────
 async function sendSMS(phone, message) {
-  if (!process.env.FAST2SMS_API_KEY) return; // skip if not configured
+  if (!process.env.FAST2SMS_API_KEY) { console.log('SMS skipped: FAST2SMS_API_KEY not set'); return; }
   // Normalize phone — strip leading 0 or +91 or 91, keep 10 digits
   const normalized = String(phone).replace(/\D/g, '').replace(/^(91|0)/, '').slice(-10);
-  if (normalized.length !== 10) return;
+  console.log('Sending SMS to:', normalized, '| message:', message);
+  if (normalized.length !== 10) { console.log('SMS skipped: invalid phone length', normalized.length); return; }
 
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify({
@@ -28,7 +29,10 @@ async function sendSMS(phone, message) {
     }, res => {
       let data = '';
       res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve(data));
+        res.on('end', () => {
+        console.log('Fast2SMS response:', data);
+        resolve(data);
+      });
     });
     req.on('error', reject);
     req.write(payload);
