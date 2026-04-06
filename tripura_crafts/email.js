@@ -1,4 +1,40 @@
 const nodemailer = require('nodemailer');
+const https = require('https');
+
+// ── SMS to CUSTOMER via Fast2SMS ──────────────────────────────────────────
+async function sendSMS(phone, message) {
+  if (!process.env.FAST2SMS_API_KEY) return; // skip if not configured
+  // Normalize phone — strip leading 0 or +91 or 91, keep 10 digits
+  const normalized = String(phone).replace(/\D/g, '').replace(/^(91|0)/, '').slice(-10);
+  if (normalized.length !== 10) return;
+
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      route:    'q',
+      message,
+      language: 'english',
+      flash:    0,
+      numbers:  normalized,
+    });
+    const req = https.request({
+      hostname: 'www.fast2sms.com',
+      path:     '/dev/bulkV2',
+      method:   'POST',
+      headers: {
+        'authorization': process.env.FAST2SMS_API_KEY,
+        'Content-Type':  'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+      },
+    }, res => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -45,6 +81,12 @@ async function notifyAdmin(order) {
 async function notifyCustomerConfirmed(order) {
   if (!order.customer_email) return; // no email address, skip
   const sizeText = order.size ? ` (Size ${order.size})` : '';
+
+  // SMS notification
+  if (order.customer_phone) {
+    const smsText = `Hi ${order.customer_name}, your Mwktai order #${order.id} (${order.product_name}${sizeText}) has been confirmed! It will be shipped within 5-7 days. - Team Mwktai`;
+    sendSMS(order.customer_phone, smsText).catch(e => console.error('SMS failed:', e));
+  }
   await transporter.sendMail({
     from:    `"Mwktai" <${process.env.GMAIL_USER}>`,
     to:      order.customer_email,
@@ -80,6 +122,13 @@ async function notifyCustomerConfirmed(order) {
 async function notifyCustomerShipped(order) {
   if (!order.customer_email) return;
   const sizeText = order.size ? ` (Size ${order.size})` : '';
+
+  // SMS notification
+  if (order.customer_phone) {
+    const trackText = order.tracking_number ? ` Track: ${order.tracking_number}.` : '';
+    const smsText = `Hi ${order.customer_name}, your Mwktai order #${order.id} is on its way!${trackText} - Team Mwktai`;
+    sendSMS(order.customer_phone, smsText).catch(e => console.error('SMS failed:', e));
+  }
   await transporter.sendMail({
     from:    `"Mwktai" <${process.env.GMAIL_USER}>`,
     to:      order.customer_email,
