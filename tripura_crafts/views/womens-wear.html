@@ -297,7 +297,7 @@
 
   let activeKey = null;
 
-  function openDrawer(key) {
+  async function openDrawer(key) {
     const drawer = document.getElementById('product-drawer');
     const inner = document.getElementById('drawer-inner');
     const cards = document.querySelectorAll('.coll-card');
@@ -319,17 +319,25 @@
     const coll = collections[key];
 
     if (coll) {
-      const cards_html = coll.items.map(p => `
+      const liveProducts = await fetch('/api/products?gender=womens').then(r => r.json()).catch(() => []);
+      const cards_html = coll.items.map(p => {
+        const live = liveProducts.find(lp => lp.name === p.name);
+        const inStock = !live || live.stock > 0;
+        const buyBtn = inStock
+          ? `<button class="buy-btn" onclick="openOrderModal('${p.name.replace(/'/g,"\\'")}', '${p.price}', null)">BUY NOW</button>`
+          : `<button class="buy-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px solid rgba(200,151,42,0.3);color:rgba(250,243,232,0.4);">OUT OF STOCK</button>`;
+        return `
         <div class="pcard">
           <div class="pcard-img"><img src="${p.img}" alt="${p.name}"/></div>
           <div class="pcard-body">
             <div class="pcard-name">${p.name}</div>
             <div class="pcard-desc">${p.desc}</div>
             <div class="pcard-price">${p.price}</div>
-            <button class="buy-btn" onclick="openOrderModal('${p.name.replace(/'/g,"\\'")}', '${p.price}', null)">BUY NOW</button>
+            ${buyBtn}
             ${p.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       inner.innerHTML = `
         <div class="drawer-heading">✦ &nbsp; ${coll.label} &nbsp; ✦</div>
         <div class="drawer-grid">${cards_html}</div>`;

@@ -64,6 +64,7 @@
     .size-btn{width:36px;height:36px;border:1px solid rgba(200,151,42,0.35);background:transparent;color:rgba(250,243,232,0.55);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;border-radius:3px;cursor:pointer;transition:all 0.2s;}
     .size-btn:hover{border-color:var(--gold);color:var(--gold);}
     .size-btn.selected{background:var(--gold);color:var(--deep);border-color:var(--gold);}
+    .size-btn.size-out{opacity:0.3;cursor:not-allowed;text-decoration:line-through;}
     .buy-btn{display:inline-block;padding:10px 22px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.25em;text-decoration:none;border-radius:2px;transition:all 0.3s;box-shadow:0 4px 16px rgba(200,151,42,0.25);}
     .buy-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,151,42,0.4);}
     .test-badge{display:inline-block;margin-left:8px;font-family:'Cinzel',serif;font-size:0.45rem;letter-spacing:0.2em;color:rgba(250,243,232,0.2);vertical-align:middle;}
@@ -302,7 +303,7 @@
 
   let activeKey = null;
 
-  function openDrawer(key) {
+  async function openDrawer(key) {
     const drawer = document.getElementById('product-drawer');
     const inner = document.getElementById('drawer-inner');
     const cards = document.querySelectorAll('.coll-card');
@@ -324,11 +325,22 @@
     const coll = collections[key];
 
     if (coll) {
+      const liveProducts = await fetch('/api/products?gender=mens').then(r => r.json()).catch(() => []);
       const cards_html = coll.items.map(p => {
+        // For sized products, check if ANY size is in stock
+        const liveVariants = liveProducts.filter(lp => lp.name === p.name);
+        const anySizeInStock = liveVariants.length === 0 || liveVariants.some(lp => lp.stock > 0);
         const sizeHtml = p.sizes ? `
           <div class="size-row" id="sizes-${p.name.replace(/\s/g,'-')}">
-            ${p.sizes.map(s => `<button class="size-btn" onclick="selectSize(this,'${p.name.replace(/'/g,"\\'")}','${s}')">${s}</button>`).join('')}
+            ${p.sizes.map(s => {
+              const variant = liveVariants.find(lp => lp.size === s);
+              const sizeOut = variant && variant.stock === 0;
+              return `<button class="size-btn${sizeOut ? ' size-out' : ''}" ${sizeOut ? 'disabled title="Out of stock"' : `onclick="selectSize(this,'${p.name.replace(/'/g,"\\'")}','${s}')"`}>${s}${sizeOut ? ' ✕' : ''}</button>`;
+            }).join('')}
           </div>` : '';
+        const buyBtn = anySizeInStock
+          ? `<button class="buy-btn" onclick="openOrderModal('${p.name.replace(/'/g,"\\'")}','${p.price}',selectedSizes['${p.name.replace(/'/g,"\\'")}']||null)">BUY NOW</button>`
+          : `<button class="buy-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px solid rgba(200,151,42,0.3);color:rgba(250,243,232,0.4);">OUT OF STOCK</button>`;
         return `
         <div class="pcard">
           <div class="pcard-img"><img src="${p.img}" alt="${p.name}"/></div>
@@ -337,7 +349,7 @@
             <div class="pcard-desc">${p.desc}</div>
             <div class="pcard-price">${p.price}</div>
             ${sizeHtml}
-            <button class="buy-btn" onclick="openOrderModal('${p.name.replace(/'/g,"\\'")}','${p.price}',selectedSizes['${p.name.replace(/'/g,"\\'")}']||null)">BUY NOW</button>
+            ${buyBtn}
             ${p.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
           </div>
         </div>`;
