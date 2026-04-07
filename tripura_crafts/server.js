@@ -50,7 +50,20 @@ app.get('/home-decor',              (_, res) => res.sendFile(view('home-decor.ht
 app.get('/contact',                 (_, res) => res.sendFile(view('contact.html')));
 app.get('/help',                    (_, res) => res.sendFile(view('help.html')));
 app.get('/track-order',             (_, res) => res.sendFile(view('track-order.html')));
-app.get('/admin',                   (_, res) => res.sendFile(view('admin.html')));
+app.get('/admin', (req, res) => {
+  const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'mwktai2024';
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Basic ')) {
+    res.set('WWW-Authenticate', 'Basic realm="Mwktai Admin"');
+    return res.status(401).send('Unauthorised');
+  }
+  const [user, pass] = Buffer.from(auth.slice(6), 'base64').toString().split(':');
+  if (pass !== ADMIN_PASS) {
+    res.set('WWW-Authenticate', 'Basic realm="Mwktai Admin"');
+    return res.status(401).send('Unauthorised');
+  }
+  res.sendFile(view('admin.html'));
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  API — Products

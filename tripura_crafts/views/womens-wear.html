@@ -230,7 +230,7 @@
     <div class="modal-divider"></div>
     <label class="modal-label">Your Name</label>
     <input class="modal-input" id="order-name" type="text" placeholder="Full name"/>
-    <label class="modal-label">WhatsApp Number</label>
+    <label class="modal-label">Phone Number</label>
     <input class="modal-input" id="order-phone" type="tel" placeholder="10-digit mobile number"/>
     <label class="modal-label">Email (for order updates)</label>
     <input class="modal-input" id="order-email" type="email" placeholder="your@email.com"/>
@@ -360,7 +360,7 @@
     document.getElementById('order-phone').value = '';
     document.getElementById('order-address').value = '';
     document.getElementById('order-submit').disabled = false;
-    document.getElementById('order-submit').textContent = 'CONFIRM & ORDER ON WHATSAPP';
+    document.getElementById('order-submit').textContent = 'PLACE ORDER';
     document.getElementById('order-modal').classList.add('open');
   }
 
@@ -409,7 +409,7 @@
         body:    JSON.stringify({ ...orderData, product_name: pendingOrder.name })
       });
     } catch(e) {
-      console.log('DB save failed, continuing to WhatsApp:', e);
+      console.log('Order save failed:', e);
     }
 
     // Show success message
