@@ -123,6 +123,21 @@ app.patch('/api/products/:id/stock', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  File-based order fallback (used when DATABASE_URL is not configured —
+//  useful for local Razorpay testing without spinning up Postgres).
+// ═══════════════════════════════════════════════════════════════════════════
+const ordersFile = path.join(__dirname, 'orders.json');
+const dbDisabled = () => !process.env.DATABASE_URL;
+
+function readOrdersFile() {
+  try { return JSON.parse(fs.readFileSync(ordersFile, 'utf8')); }
+  catch (_) { return []; }
+}
+function writeOrdersFile(list) {
+  fs.writeFileSync(ordersFile, JSON.stringify(list, null, 2));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  API — Razorpay (Standard Web Checkout)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -217,6 +232,27 @@ app.post('/api/orders', async (req, res) => {
 
     const payment_status = razorpay_payment_id ? 'paid' : 'pending';
 
+    // ── No-DB fallback: persist to orders.json instead. ────────────────────
+    if (dbDisabled()) {
+      const list = readOrdersFile();
+      const order = {
+        id: list.length ? list[0].id + 1 : 1,
+        product_id, product_name,
+        customer_name, customer_phone, customer_email, customer_address,
+        size, quantity: quantity || 1, price_paid,
+        status: 'received',
+        razorpay_order_id: razorpay_order_id || null,
+        razorpay_payment_id: razorpay_payment_id || null,
+        payment_status,
+        ordered_at: new Date().toISOString(),
+      };
+      list.unshift(order);
+      writeOrdersFile(list);
+      console.log(`Order #${order.id} saved to orders.json (no DATABASE_URL).`);
+      notifyAdmin(order).catch(e => console.error('Admin email failed:', e));
+      return res.status(201).json({ success: true, order_id: order.id, storage: 'file' });
+    }
+
     const result = await pool.query(
       `INSERT INTO orders
          (product_id, customer_name, customer_phone, customer_email,
@@ -250,6 +286,13 @@ app.post('/api/orders', async (req, res) => {
 // GET /api/orders — list all orders (newest first)
 app.get('/api/orders', async (req, res) => {
   try {
+    if (dbDisabled()) {
+      const { status } = req.query;
+      let list = readOrdersFile();
+      if (status) list = list.filter(o => o.status === status);
+      return res.json(list);
+    }
+
     const { status } = req.query;
     let query = `
       SELECT o.*, p.name AS product_name, p.collection, p.gender, p.image
@@ -270,6 +313,23 @@ app.get('/api/orders', async (req, res) => {
 app.patch('/api/orders/:id', async (req, res) => {
   try {
     const { status, tracking_number, notes } = req.body;
+
+    if (dbDisabled()) {
+      const list = readOrdersFile();
+      const idx = list.findIndex(o => String(o.id) === String(req.params.id));
+      if (idx === -1) return res.status(404).json({ error: 'Order not found' });
+      const order = list[idx];
+      if (status          !== undefined) order.status          = status;
+      if (tracking_number !== undefined) order.tracking_number = tracking_number;
+      if (notes           !== undefined) order.notes           = notes;
+      order.updated_at = new Date().toISOString();
+      list[idx] = order;
+      writeOrdersFile(list);
+      if (status === 'confirmed') notifyCustomerConfirmed(order).catch(e => console.error('Confirm email failed:', e));
+      if (status === 'shipped')   notifyCustomerShipped(order).catch(e => console.error('Shipped email failed:', e));
+      return res.json(order);
+    }
+
     const result = await pool.query(
       `UPDATE orders
        SET status          = COALESCE($1, status),

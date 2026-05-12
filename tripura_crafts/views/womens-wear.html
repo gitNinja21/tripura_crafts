@@ -319,7 +319,10 @@
     const coll = collections[key];
 
     if (coll) {
-      const liveProducts = await fetch('/api/products?gender=womens').then(r => r.json()).catch(() => []);
+      const liveProducts = await fetch('/api/products?gender=womens')
+        .then(r => r.ok ? r.json() : [])
+        .then(d => Array.isArray(d) ? d : [])
+        .catch(() => []);
       const cards_html = coll.items.map(p => {
         const live = liveProducts.find(lp => lp.name === p.name);
         const inStock = !live || live.stock > 0;
@@ -386,7 +389,9 @@
     // Find product_id from DB
     let product = null;
     try {
-      const products = await fetch('/api/products?gender=womens').then(r => r.json());
+      const products = await fetch('/api/products?gender=womens')
+        .then(r => r.ok ? r.json() : [])
+        .then(d => Array.isArray(d) ? d : []);
       product = products.find(p =>
         p.name === pendingOrder.name &&
         (pendingOrder.size ? p.size === pendingOrder.size : true)

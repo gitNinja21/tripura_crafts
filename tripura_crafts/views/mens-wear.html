@@ -325,7 +325,10 @@
     const coll = collections[key];
 
     if (coll) {
-      const liveProducts = await fetch('/api/products?gender=mens').then(r => r.json()).catch(() => []);
+      const liveProducts = await fetch('/api/products?gender=mens')
+        .then(r => r.ok ? r.json() : [])
+        .then(d => Array.isArray(d) ? d : [])
+        .catch(() => []);
       const cards_html = coll.items.map(p => {
         // For sized products, check if ANY size is in stock
         const liveVariants = liveProducts.filter(lp => lp.name === p.name);
@@ -411,7 +414,9 @@
 
     let product = null;
     try {
-      const products = await fetch('/api/products?gender=mens').then(r => r.json());
+      const products = await fetch('/api/products?gender=mens')
+        .then(r => r.ok ? r.json() : [])
+        .then(d => Array.isArray(d) ? d : []);
       product = products.find(p =>
         p.name === pendingOrder.name &&
         (pendingOrder.size ? p.size === pendingOrder.size : true)
