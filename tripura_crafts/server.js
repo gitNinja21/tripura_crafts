@@ -1,8 +1,31 @@
+// Load .env if dotenv is available (no-op in production where the host
+// injects env vars directly — Railway, Heroku, etc.).
+try { require('dotenv').config(); } catch (_) { /* dotenv optional */ }
+
 const express = require('express');
 const path    = require('path');
 const fs      = require('fs');
+const crypto  = require('crypto');
 const pool    = require('./db');
 const { notifyAdmin, notifyCustomerConfirmed, notifyCustomerShipped } = require('./email');
+
+// Razorpay SDK is only required if credentials are configured, so a developer
+// who hasn't run `npm install` yet can still boot the rest of the app.
+let razorpay = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  try {
+    const Razorpay = require('razorpay');
+    razorpay = new Razorpay({
+      key_id:     process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+    console.log('Razorpay configured.');
+  } catch (err) {
+    console.error('Razorpay SDK not installed — run `npm install razorpay`.', err.message);
+  }
+} else {
+  console.log('No RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET — payments disabled.');
+}
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -100,23 +123,110 @@ app.patch('/api/products/:id/stock', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  API — Razorpay (Standard Web Checkout)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// GET /api/razorpay/key — expose the public Key ID to the frontend.
+// (KEY_SECRET is NEVER sent to the browser.)
+app.get('/api/razorpay/key', (req, res) => {
+  if (!process.env.RAZORPAY_KEY_ID) {
+    return res.status(500).json({ error: 'Razorpay not configured' });
+  }
+  res.json({ key_id: process.env.RAZORPAY_KEY_ID });
+});
+
+// POST /api/razorpay/create-order
+// Body: { amount: <paise int>, currency?: 'INR', receipt?: string }
+// Returns: { order_id, amount, currency }
+app.post('/api/razorpay/create-order', async (req, res) => {
+  if (!razorpay) {
+    return res.status(500).json({ error: 'Razorpay not configured on server' });
+  }
+  try {
+    const { amount, currency = 'INR', receipt } = req.body || {};
+    const amountPaise = Number(amount);
+    if (!Number.isInteger(amountPaise) || amountPaise < 100) {
+      return res.status(400).json({ error: 'amount must be an integer >= 100 (paise)' });
+    }
+    const order = await razorpay.orders.create({
+      amount:   amountPaise,
+      currency,
+      receipt:  (receipt || `rcpt_${Date.now()}`).slice(0, 40),
+    });
+    res.json({
+      order_id: order.id,
+      amount:   order.amount,
+      currency: order.currency,
+    });
+  } catch (err) {
+    console.error('Razorpay create-order error:', err);
+    // Razorpay SDK errors expose statusCode (401 on bad credentials, etc.)
+    const status = err && err.statusCode === 401 ? 401 : 500;
+    const message =
+      (err && err.error && err.error.description) ||
+      err.message || 'Razorpay error';
+    res.status(status).json({ error: message });
+  }
+});
+
+// POST /api/razorpay/verify-payment
+// Body: { razorpay_order_id, razorpay_payment_id, razorpay_signature }
+// Returns: { success: true }  (only on signature match)
+app.post('/api/razorpay/verify-payment', (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ success: false, error: 'Missing fields' });
+  }
+  if (!process.env.RAZORPAY_KEY_SECRET) {
+    return res.status(500).json({ success: false, error: 'Razorpay not configured' });
+  }
+  try {
+    const expected = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+
+    // Length-mismatched buffers throw inside timingSafeEqual; guard against it.
+    const a = Buffer.from(expected, 'hex');
+    const b = Buffer.from(String(razorpay_signature), 'hex');
+    const valid = a.length === b.length && crypto.timingSafeEqual(a, b);
+
+    if (!valid) {
+      return res.status(400).json({ success: false, error: 'Invalid signature' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Razorpay verify error:', err);
+    res.status(400).json({ success: false, error: 'Invalid signature' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  API — Orders
 // ═══════════════════════════════════════════════════════════════════════════
 
 // POST /api/orders — create a new order
+// Razorpay fields (razorpay_order_id, razorpay_payment_id) are optional; when
+// present they're stored for audit. Signature verification MUST be done by
+// calling POST /api/razorpay/verify-payment before this endpoint.
 app.post('/api/orders', async (req, res) => {
   try {
     const { product_id, product_name, customer_name, customer_phone,
-            customer_email, customer_address, size, quantity, price_paid } = req.body;
+            customer_email, customer_address, size, quantity, price_paid,
+            razorpay_order_id, razorpay_payment_id } = req.body;
+
+    const payment_status = razorpay_payment_id ? 'paid' : 'pending';
 
     const result = await pool.query(
       `INSERT INTO orders
          (product_id, customer_name, customer_phone, customer_email,
-          customer_address, size, quantity, price_paid, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'received')
+          customer_address, size, quantity, price_paid, status,
+          razorpay_order_id, razorpay_payment_id, payment_status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'received',$9,$10,$11)
        RETURNING *`,
       [product_id, customer_name, customer_phone, customer_email,
-       customer_address, size, quantity || 1, price_paid]
+       customer_address, size, quantity || 1, price_paid,
+       razorpay_order_id || null, razorpay_payment_id || null, payment_status]
     );
 
     // Reduce stock

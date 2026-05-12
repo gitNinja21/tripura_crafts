@@ -38,8 +38,18 @@ CREATE TABLE IF NOT EXISTS orders (
   tracking_number  VARCHAR(100),             -- filled when shipped
   notes            TEXT,                     -- admin notes
   ordered_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+  updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  -- Razorpay payment audit fields (added in v2 — see ALTER TABLE below).
+  razorpay_order_id   VARCHAR(50),
+  razorpay_payment_id VARCHAR(50),
+  payment_status      VARCHAR(20) NOT NULL DEFAULT 'pending'
+                                            -- pending | paid | failed
 );
+
+-- Idempotent migration for databases created before Razorpay was added.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_order_id   VARCHAR(50);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_payment_id VARCHAR(50);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status      VARCHAR(20) NOT NULL DEFAULT 'pending';
 
 -- Auto-update updated_at on every status change
 CREATE OR REPLACE FUNCTION update_updated_at()

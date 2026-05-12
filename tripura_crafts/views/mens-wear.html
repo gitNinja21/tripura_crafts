@@ -231,9 +231,9 @@
     <label class="modal-label">Delivery Address</label>
     <input class="modal-input" id="order-address" type="text" placeholder="House, Street, City, PIN"/>
     <button class="modal-submit" id="order-submit" onclick="submitOrder()">
-      PLACE ORDER
+      PAY &amp; PLACE ORDER
     </button>
-    <p class="modal-note">We'll confirm your order within a few hours.<br/>Free shipping across India.</p>
+    <p class="modal-note">Secure payment by Razorpay.<br/>Free shipping across India.</p>
     <div class="modal-success" id="order-success">
       <div class="modal-success-icon">✦</div>
       <div class="modal-success-title">Order Placed!</div>
@@ -407,44 +407,72 @@
 
     const btn = document.getElementById('order-submit');
     btn.disabled = true;
-    btn.textContent = 'Saving order...';
+    btn.textContent = 'Opening payment...';
 
+    let product = null;
     try {
       const products = await fetch('/api/products?gender=mens').then(r => r.json());
-      const product = products.find(p =>
+      product = products.find(p =>
         p.name === pendingOrder.name &&
         (pendingOrder.size ? p.size === pendingOrder.size : true)
       );
+    } catch (_) { /* product_id remains null — order can still be saved */ }
 
-      await fetch('/api/orders', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_id:       product ? product.id : null,
-          product_name:     pendingOrder.name,
-          customer_name:    customerName,
-          customer_phone:   customerPhone,
-          customer_email:   customerEmail,
-          customer_address: customerAddress,
-          size:             pendingOrder.size || null,
-          quantity:         1,
-          price_paid:       parseInt(pendingOrder.price.replace(/[^\d]/g, ''))
-        })
-      });
-    } catch(e) {
-      console.log('Order save failed:', e);
-    }
+    const priceRupees = parseInt(pendingOrder.price.replace(/[^\d]/g, ''));
 
-    // Show success message
-    document.getElementById('order-submit').style.display = 'none';
-    document.querySelector('.modal-note').style.display = 'none';
-    document.getElementById('order-success').style.display = 'block';
-    setTimeout(() => closeOrderModal(), 3500);
+    const finishOrder = async (rzpResponse) => {
+      btn.textContent = 'Saving order...';
+      try {
+        await fetch('/api/orders', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id:          product ? product.id : null,
+            product_name:        pendingOrder.name,
+            customer_name:       customerName,
+            customer_phone:      customerPhone,
+            customer_email:      customerEmail,
+            customer_address:    customerAddress,
+            size:                pendingOrder.size || null,
+            quantity:            1,
+            price_paid:          priceRupees,
+            razorpay_order_id:   rzpResponse.razorpay_order_id,
+            razorpay_payment_id: rzpResponse.razorpay_payment_id,
+          })
+        });
+      } catch (e) {
+        console.log('Order save failed:', e);
+      }
+
+      document.getElementById('order-submit').style.display = 'none';
+      document.querySelector('.modal-note').style.display = 'none';
+      document.getElementById('order-success').style.display = 'block';
+      setTimeout(() => closeOrderModal(), 3500);
+    };
+
+    window.MwktaiPayment.pay({
+      amountInRupees: priceRupees,
+      productName:    pendingOrder.name + (pendingOrder.size ? ` (Size ${pendingOrder.size})` : ''),
+      customer:       { name: customerName, email: customerEmail, phone: customerPhone },
+      onSuccess:      finishOrder,
+      onError: (msg) => {
+        alert(msg);
+        btn.disabled = false;
+        btn.textContent = 'PAY & PLACE ORDER';
+      },
+      onDismiss: () => {
+        btn.disabled = false;
+        btn.textContent = 'PAY & PLACE ORDER';
+      },
+    });
   }
 
   document.getElementById('order-modal').addEventListener('click', function(e) {
     if (e.target === this) closeOrderModal();
   });
 </script>
+<!-- Razorpay Standard Checkout -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="/static/razorpay-checkout.js"></script>
 </body>
 </html>
