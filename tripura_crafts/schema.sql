@@ -60,6 +60,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- DROP first so re-running schema.sql on an existing DB doesn't fail here.
+-- ('CREATE TRIGGER' is not idempotent; a failure here rolls back the whole
+--  batch — including the ALTER TABLE column additions above.)
+DROP TRIGGER IF EXISTS orders_updated_at ON orders;
 CREATE TRIGGER orders_updated_at
   BEFORE UPDATE ON orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
