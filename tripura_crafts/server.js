@@ -325,15 +325,19 @@ app.post('/api/orders', async (req, res) => {
 
     // ── Idempotency: in the Razorpay flow, create-order already reserved
     //    stock and inserted this order. Don't insert a duplicate or decrement
-    //    stock a second time — just confirm the existing row. ────────────────
+    //    stock a second time — just confirm the existing row, and send the
+    //    admin notification here (create-order can't, payment isn't done yet). ─
     if (razorpay_order_id) {
       const existing = await pool.query(
-        'SELECT id FROM orders WHERE razorpay_order_id = $1 LIMIT 1',
+        'SELECT * FROM orders WHERE razorpay_order_id = $1 LIMIT 1',
         [razorpay_order_id]
       );
       if (existing.rowCount > 0) {
+        const row = existing.rows[0];
+        notifyAdmin({ ...row, product_name: product_name || row.product_name })
+          .catch(e => console.error('Admin email failed:', e));
         return res.status(201).json({
-          success: true, order_id: existing.rows[0].id, reserved: true,
+          success: true, order_id: row.id, reserved: true,
         });
       }
     }
