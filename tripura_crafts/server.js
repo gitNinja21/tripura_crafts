@@ -151,28 +151,80 @@ app.get('/api/razorpay/key', (req, res) => {
 });
 
 // POST /api/razorpay/create-order
-// Body: { amount: <paise int>, currency?: 'INR', receipt?: string }
-// Returns: { order_id, amount, currency }
+// Body: { amount, currency?, receipt?, product_id?, quantity?, size?,
+//         product_name?, customer_name?, customer_phone?, customer_email?,
+//         customer_address? }
+// Returns: { order_id, amount, currency }   |   409 { sold_out: true } if no stock
+//
+// When a product_id is supplied and the DB is connected, stock is RESERVED
+// here — BEFORE the payment modal opens — inside a transaction: an atomic
+// conditional decrement plus a 'pending' order row tied to the Razorpay order.
+// This guarantees a customer can never pay for an item that's already gone.
+// Reservations abandoned without payment are released by the sweep below.
 app.post('/api/razorpay/create-order', async (req, res) => {
   if (!razorpay) {
     return res.status(500).json({ error: 'Razorpay not configured on server' });
   }
   try {
-    const { amount, currency = 'INR', receipt } = req.body || {};
+    const { amount, currency = 'INR', receipt,
+            product_id, quantity, size, product_name,
+            customer_name, customer_phone, customer_email, customer_address } = req.body || {};
     const amountPaise = Number(amount);
     if (!Number.isInteger(amountPaise) || amountPaise < 100) {
       return res.status(400).json({ error: 'amount must be an integer >= 100 (paise)' });
     }
-    const order = await razorpay.orders.create({
+    const qty = quantity || 1;
+
+    const makeRzpOrder = () => razorpay.orders.create({
       amount:   amountPaise,
       currency,
       receipt:  (receipt || `rcpt_${Date.now()}`).slice(0, 40),
     });
-    res.json({
-      order_id: order.id,
-      amount:   order.amount,
-      currency: order.currency,
-    });
+
+    // ── Reserve stock + create a pending order (DB connected & product known) ─
+    if (!dbDisabled() && product_id) {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+
+        // Atomic conditional reservation — 0 rows means it's already sold out.
+        const stockResult = await client.query(
+          'UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1',
+          [qty, product_id]
+        );
+        if (stockResult.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return res.status(409).json({
+            sold_out: true,
+            error: 'This item just sold out — please pick another size or product.',
+          });
+        }
+
+        // Stock is held; create the Razorpay order, then the pending row.
+        const order = await makeRzpOrder();
+        await client.query(
+          `INSERT INTO orders
+             (product_id, customer_name, customer_phone, customer_email,
+              customer_address, size, quantity, price_paid, status,
+              razorpay_order_id, payment_status)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'received',$9,'pending')`,
+          [product_id, customer_name || 'Pending', customer_phone || '',
+           customer_email || null, customer_address || 'Pending',
+           size || null, qty, Math.round(amountPaise / 100), order.id]
+        );
+        await client.query('COMMIT');
+        return res.json({ order_id: order.id, amount: order.amount, currency: order.currency });
+      } catch (txErr) {
+        await client.query('ROLLBACK').catch(() => {});
+        throw txErr;
+      } finally {
+        client.release();
+      }
+    }
+
+    // ── No DB, or no product specified: create the order without reservation ─
+    const order = await makeRzpOrder();
+    res.json({ order_id: order.id, amount: order.amount, currency: order.currency });
   } catch (err) {
     console.error('Razorpay create-order error:', err);
     // Razorpay SDK errors expose statusCode (401 on bad credentials, etc.)
@@ -187,7 +239,7 @@ app.post('/api/razorpay/create-order', async (req, res) => {
 // POST /api/razorpay/verify-payment
 // Body: { razorpay_order_id, razorpay_payment_id, razorpay_signature }
 // Returns: { success: true }  (only on signature match)
-app.post('/api/razorpay/verify-payment', (req, res) => {
+app.post('/api/razorpay/verify-payment', async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     return res.status(400).json({ success: false, error: 'Missing fields' });
@@ -195,6 +247,8 @@ app.post('/api/razorpay/verify-payment', (req, res) => {
   if (!process.env.RAZORPAY_KEY_SECRET) {
     return res.status(500).json({ success: false, error: 'Razorpay not configured' });
   }
+
+  let valid = false;
   try {
     const expected = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -204,16 +258,32 @@ app.post('/api/razorpay/verify-payment', (req, res) => {
     // Length-mismatched buffers throw inside timingSafeEqual; guard against it.
     const a = Buffer.from(expected, 'hex');
     const b = Buffer.from(String(razorpay_signature), 'hex');
-    const valid = a.length === b.length && crypto.timingSafeEqual(a, b);
-
-    if (!valid) {
-      return res.status(400).json({ success: false, error: 'Invalid signature' });
-    }
-    res.json({ success: true });
+    valid = a.length === b.length && crypto.timingSafeEqual(a, b);
   } catch (err) {
     console.error('Razorpay verify error:', err);
-    res.status(400).json({ success: false, error: 'Invalid signature' });
+    return res.status(400).json({ success: false, error: 'Invalid signature' });
   }
+
+  if (!valid) {
+    return res.status(400).json({ success: false, error: 'Invalid signature' });
+  }
+
+  // Signature good — promote the reserved (pending) order to paid. A DB hiccup
+  // here must NOT fail the request: the payment is verified, which is what
+  // matters; /api/orders is idempotent and the sweep won't touch a paid row.
+  if (!dbDisabled()) {
+    try {
+      await pool.query(
+        `UPDATE orders
+            SET payment_status = 'paid', razorpay_payment_id = $2
+          WHERE razorpay_order_id = $1 AND payment_status = 'pending'`,
+        [razorpay_order_id, razorpay_payment_id]
+      );
+    } catch (dbErr) {
+      console.error('verify-payment: could not promote order:', dbErr.message);
+    }
+  }
+  res.json({ success: true });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -253,31 +323,71 @@ app.post('/api/orders', async (req, res) => {
       return res.status(201).json({ success: true, order_id: order.id, storage: 'file' });
     }
 
-    const result = await pool.query(
-      `INSERT INTO orders
-         (product_id, customer_name, customer_phone, customer_email,
-          customer_address, size, quantity, price_paid, status,
-          razorpay_order_id, razorpay_payment_id, payment_status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'received',$9,$10,$11)
-       RETURNING *`,
-      [product_id, customer_name, customer_phone, customer_email,
-       customer_address, size, quantity || 1, price_paid,
-       razorpay_order_id || null, razorpay_payment_id || null, payment_status]
-    );
-
-    // Reduce stock
-    if (product_id) {
-      await pool.query(
-        'UPDATE products SET stock = stock - $1 WHERE id = $2',
-        [quantity || 1, product_id]
+    // ── Idempotency: in the Razorpay flow, create-order already reserved
+    //    stock and inserted this order. Don't insert a duplicate or decrement
+    //    stock a second time — just confirm the existing row. ────────────────
+    if (razorpay_order_id) {
+      const existing = await pool.query(
+        'SELECT id FROM orders WHERE razorpay_order_id = $1 LIMIT 1',
+        [razorpay_order_id]
       );
+      if (existing.rowCount > 0) {
+        return res.status(201).json({
+          success: true, order_id: existing.rows[0].id, reserved: true,
+        });
+      }
     }
 
-    // Email admin
-    notifyAdmin({ ...result.rows[0], product_name })
-      .catch(e => console.error('Admin email failed:', e));
+    // ── DB path: stock decrement + order insert in one transaction ─────────
+    // The stock UPDATE is conditional (`stock >= qty`) so two simultaneous
+    // buyers of the last unit can't both succeed — Postgres row locking
+    // serialises them, and the loser's UPDATE matches 0 rows. (This branch
+    // only runs for non-reserved orders, e.g. legacy or non-Razorpay flows.)
+    const qty = quantity || 1;
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    res.status(201).json({ success: true, order_id: result.rows[0].id });
+      if (product_id) {
+        const stockResult = await client.query(
+          'UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1',
+          [qty, product_id]
+        );
+        if (stockResult.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return res.status(409).json({
+            success: false,
+            sold_out: true,
+            error: 'This item just sold out — please refresh and try another size/product.',
+          });
+        }
+      }
+
+      const result = await client.query(
+        `INSERT INTO orders
+           (product_id, customer_name, customer_phone, customer_email,
+            customer_address, size, quantity, price_paid, status,
+            razorpay_order_id, razorpay_payment_id, payment_status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'received',$9,$10,$11)
+         RETURNING *`,
+        [product_id, customer_name, customer_phone, customer_email,
+         customer_address, size, qty, price_paid,
+         razorpay_order_id || null, razorpay_payment_id || null, payment_status]
+      );
+
+      await client.query('COMMIT');
+
+      // Email admin (fire-and-forget — outside the transaction)
+      notifyAdmin({ ...result.rows[0], product_name })
+        .catch(e => console.error('Admin email failed:', e));
+
+      res.status(201).json({ success: true, order_id: result.rows[0].id });
+    } catch (txErr) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw txErr;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -360,6 +470,53 @@ app.patch('/api/orders/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Reservation sweep
+// ═══════════════════════════════════════════════════════════════════════════
+// create-order reserves stock by inserting a 'pending' order. If the customer
+// abandons the Razorpay modal — or their browser dies before paying — that
+// stock would stay locked forever. Every 5 minutes, release reservations that
+// have been pending longer than RESERVATION_TTL_MIN: restore the stock and
+// mark the order 'abandoned'. Paid orders are never touched.
+const RESERVATION_TTL_MIN = 20;
+
+async function sweepStaleReservations() {
+  if (dbDisabled()) return;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const stale = await client.query(
+      `SELECT id, product_id, quantity FROM orders
+        WHERE payment_status = 'pending'
+          AND ordered_at < NOW() - ($1 * INTERVAL '1 minute')
+        FOR UPDATE`,
+      [RESERVATION_TTL_MIN]
+    );
+    for (const o of stale.rows) {
+      if (o.product_id) {
+        await client.query(
+          'UPDATE products SET stock = stock + $1 WHERE id = $2',
+          [o.quantity || 1, o.product_id]
+        );
+      }
+      await client.query(
+        `UPDATE orders SET payment_status = 'abandoned' WHERE id = $1`,
+        [o.id]
+      );
+    }
+    await client.query('COMMIT');
+    if (stale.rowCount > 0) {
+      console.log(`Reservation sweep: released ${stale.rowCount} abandoned reservation(s).`);
+    }
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('Reservation sweep error:', err.message);
+  } finally {
+    client.release();
+  }
+}
+setInterval(sweepStaleReservations, 5 * 60 * 1000);
 
 // ── Fallback → home ────────────────────────────────────────────────────────
 app.use((_, res) => res.redirect('/'));

@@ -27,14 +27,20 @@
     return key_id;
   }
 
-  async function createOrder({ amountPaise, receipt }) {
+  async function createOrder({ amountPaise, receipt, order }) {
     const res = await fetch('/api/razorpay/create-order', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ amount: amountPaise, currency: 'INR', receipt }),
+      // `order` carries product_id / quantity / size / customer_* so the
+      // backend can RESERVE stock before the payment modal opens.
+      body:    JSON.stringify({ amount: amountPaise, currency: 'INR', receipt, ...(order || {}) }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Could not create order');
+    if (!res.ok) {
+      const err = new Error(data.error || 'Could not create order');
+      err.soldOut = !!data.sold_out;   // 409 — item went out of stock
+      throw err;
+    }
     return data; // { order_id, amount, currency }
   }
 
@@ -56,6 +62,7 @@
    *   amountInRupees: number,
    *   productName:    string,
    *   customer:       { name: string, email?: string, phone?: string },
+   *   order?:         object,   // product_id, quantity, size, customer_* — for stock reservation
    *   receipt?:       string,
    *   onSuccess:      (payment) => void,
    *   onError?:       (message)  => void,
@@ -79,9 +86,10 @@
     try {
       [keyId, order] = await Promise.all([
         fetchKeyId(),
-        createOrder({ amountPaise, receipt: opts.receipt }),
+        createOrder({ amountPaise, receipt: opts.receipt, order: opts.order }),
       ]);
     } catch (err) {
+      // err.soldOut is set when create-order returns 409 (no stock).
       return onError(err.message || 'Could not start payment.');
     }
 
