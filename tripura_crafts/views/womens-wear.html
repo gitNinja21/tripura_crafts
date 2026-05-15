@@ -57,6 +57,10 @@
     /* ── Product drawer (hidden until click) ── */
     .product-drawer{grid-column:1/-1;max-height:0;overflow:hidden;transition:max-height 0.7s ease,opacity 0.4s ease;opacity:0;}
     .product-drawer.open{max-height:700px;opacity:1;}
+    /* Drawer goes 2-col then 1-col on smaller screens — raise the cap so
+       stacked product cards aren't clipped by overflow:hidden. */
+    @media(max-width:860px){.product-drawer.open{max-height:1600px;}}
+    @media(max-width:540px){.product-drawer.open{max-height:2400px;}}
     .drawer-inner{background:#1e0d00;border:1px solid rgba(200,151,42,0.35);border-radius:10px;overflow:hidden;margin-top:4px;padding:28px 28px 32px;}
     .drawer-heading{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.38em;color:var(--gold);text-transform:uppercase;margin-bottom:20px;}
     .drawer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
@@ -434,6 +438,17 @@
       amountInRupees: priceRupees,
       productName:    pendingOrder.name,
       customer:       { name: customerName, email: customerEmail, phone: customerPhone },
+      // Sent to create-order so the backend RESERVES stock before the modal opens.
+      order: {
+        product_id:       product ? product.id : null,
+        product_name:     pendingOrder.name,
+        quantity:         1,
+        size:             pendingOrder.size || null,
+        customer_name:    customerName,
+        customer_phone:   customerPhone,
+        customer_email:   customerEmail,
+        customer_address: customerAddress,
+      },
       onSuccess:      finishOrder,
       onError: (msg) => {
         alert(msg);
