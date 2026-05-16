@@ -141,7 +141,10 @@
         <h2 class="section-title">Inventory</h2>
         <p class="section-sub">Edit any field or add new products — changes reflect on the storefront immediately</p>
       </div>
-      <button class="add-product-btn" onclick="openProductModal()">+ Add Product</button>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-cancel" onclick="dedupeProducts()" title="Removes duplicate rows created by earlier seed re-inserts.">Clean up duplicates</button>
+        <button class="add-product-btn" onclick="openProductModal()">+ Add Product</button>
+      </div>
     </div>
     <div id="inventory-container"></div>
   </div>
@@ -442,6 +445,20 @@
     if (!confirm(`Delete "${name}"? It will be hidden from the storefront. (Existing orders are preserved.)`)) return;
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
     if (!res.ok) { alert('Delete failed.'); return; }
+    loadInventory();
+  }
+
+  // ── One-shot duplicate cleanup ────────────────────────────────────────────
+  async function dedupeProducts() {
+    if (!confirm('Soft-delete duplicate product rows? For each unique (gender, collection, name, size), the row with the highest stock is kept; the rest are deactivated.')) return;
+    const res = await fetch('/api/admin/dedupe-products', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert('Cleanup failed: ' + (data.error || res.status)); return; }
+    alert(
+      `✓ Deactivated ${data.deactivated_count} duplicate row(s).\n\n` +
+      `Active products now: ${data.after.active_count}\n` +
+      `Remaining duplicate groups: ${data.after.remaining_duplicate_groups}`
+    );
     loadInventory();
   }
 

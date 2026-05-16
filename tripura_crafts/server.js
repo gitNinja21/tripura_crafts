@@ -174,6 +174,48 @@ app.patch('/api/products/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// POST /api/admin/dedupe-products — one-shot cleanup for duplicate seed rows.
+// Keeps the row with the highest stock per unique (gender, collection, name,
+// size) combo, soft-deletes the rest. Idempotent — running it again is a
+// no-op once duplicates are gone.
+app.post('/api/admin/dedupe-products', requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      WITH ranked AS (
+        SELECT id,
+               ROW_NUMBER() OVER (
+                 PARTITION BY gender, collection, name, size
+                 ORDER BY stock DESC, id ASC
+               ) AS rn
+        FROM products
+        WHERE active = true
+      )
+      UPDATE products
+         SET active = false
+       WHERE id IN (SELECT id FROM ranked WHERE rn > 1)
+       RETURNING id, name, size, stock`);
+
+    // Confirm what's left
+    const after = await pool.query(`
+      SELECT
+        (SELECT COUNT(*)::int FROM products WHERE active = true) AS active_count,
+        (SELECT COUNT(*)::int FROM (
+          SELECT 1 FROM products WHERE active = true
+          GROUP BY gender, collection, name, size HAVING COUNT(*) > 1
+        ) x) AS remaining_duplicate_groups`);
+
+    res.json({
+      success: true,
+      deactivated_count: result.rowCount,
+      deactivated_rows: result.rows,
+      after: after.rows[0],
+    });
+  } catch (err) {
+    console.error('Dedupe error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/products/:id — soft delete (sets active = false). (admin)
 // Soft so existing orders that reference this product still resolve cleanly.
 app.delete('/api/products/:id', requireAdmin, async (req, res) => {
