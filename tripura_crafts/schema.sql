@@ -69,26 +69,33 @@ CREATE TRIGGER orders_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ─────────────────────────────────────────────
---  Seed: initial products (Risa + Kubai)
+--  Seed: initial products (Risa + Kubai) — first-time only
 -- ─────────────────────────────────────────────
+--
+-- Guarded against re-running: the seed only fires when `products` is empty.
+-- (The previous version used `ON CONFLICT DO NOTHING`, but the only unique
+--  constraint on `products` is its auto-incrementing `id`, so the seed was
+--  re-inserting all 12 rows on every server restart.)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM products LIMIT 1) THEN
+    INSERT INTO products (gender, collection, name, size, price, stock, image, description) VALUES
+      -- Risa (no sizes)
+      ('womens', 'risa', 'Risa Heritage Set',    NULL, 1499, 10, 'risa_1.jpg', 'Full handwoven Risa & Rignai set on traditional pit looms. Each piece unique. Ships in 5–7 days.'),
+      ('womens', 'risa', 'Risa Classic Wrap',    NULL,  899, 15, 'risa_2.jpg', 'Single Risa in deep crimson with gold border — everyday wear, traditionally styled.'),
+      ('womens', 'risa', 'Risa Ceremonial Set',  NULL, 2199,  5, 'risa_3.jpg', 'Premium Risa & Rignai in silk-blend thread, made for festivals and weddings.'),
 
-INSERT INTO products (gender, collection, name, size, price, stock, image, description) VALUES
-  -- Risa (no sizes)
-  ('womens', 'risa', 'Risa Heritage Set',    NULL, 1499, 10, 'risa_1.jpg', 'Full handwoven Risa & Rignai set on traditional pit looms. Each piece unique. Ships in 5–7 days.'),
-  ('womens', 'risa', 'Risa Classic Wrap',    NULL,  899, 15, 'risa_2.jpg', 'Single Risa in deep crimson with gold border — everyday wear, traditionally styled.'),
-  ('womens', 'risa', 'Risa Ceremonial Set',  NULL, 2199,  5, 'risa_3.jpg', 'Premium Risa & Rignai in silk-blend thread, made for festivals and weddings.'),
+      -- Kubai (S / M / L)
+      ('mens', 'kubai', 'Kubai Heritage Shirt', 'S', 1299, 8,  'kubai_1.jpg', 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.'),
+      ('mens', 'kubai', 'Kubai Heritage Shirt', 'M', 1299, 12, 'kubai_1.jpg', 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.'),
+      ('mens', 'kubai', 'Kubai Heritage Shirt', 'L', 1299, 6,  'kubai_1.jpg', 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.'),
 
-  -- Kubai (S / M / L)
-  ('mens', 'kubai', 'Kubai Heritage Shirt', 'S', 1299, 8,  'kubai_1.jpg', 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.'),
-  ('mens', 'kubai', 'Kubai Heritage Shirt', 'M', 1299, 12, 'kubai_1.jpg', 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.'),
-  ('mens', 'kubai', 'Kubai Heritage Shirt', 'L', 1299, 6,  'kubai_1.jpg', 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.'),
+      ('mens', 'kubai', 'Kubai Everyday', 'S',  849, 10, 'kubai_2.jpg', 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.'),
+      ('mens', 'kubai', 'Kubai Everyday', 'M',  849, 14, 'kubai_2.jpg', 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.'),
+      ('mens', 'kubai', 'Kubai Everyday', 'L',  849,  8, 'kubai_2.jpg', 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.'),
 
-  ('mens', 'kubai', 'Kubai Everyday', 'S',  849, 10, 'kubai_2.jpg', 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.'),
-  ('mens', 'kubai', 'Kubai Everyday', 'M',  849, 14, 'kubai_2.jpg', 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.'),
-  ('mens', 'kubai', 'Kubai Everyday', 'L',  849,  8, 'kubai_2.jpg', 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.'),
-
-  ('mens', 'kubai', 'Kubai Ceremonial', 'S', 2099, 4, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.'),
-  ('mens', 'kubai', 'Kubai Ceremonial', 'M', 2099, 6, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.'),
-  ('mens', 'kubai', 'Kubai Ceremonial', 'L', 2099, 3, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.')
-
-ON CONFLICT DO NOTHING;
+      ('mens', 'kubai', 'Kubai Ceremonial', 'S', 2099, 4, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.'),
+      ('mens', 'kubai', 'Kubai Ceremonial', 'M', 2099, 6, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.'),
+      ('mens', 'kubai', 'Kubai Ceremonial', 'L', 2099, 3, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.');
+  END IF;
+END $$;

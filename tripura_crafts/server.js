@@ -174,6 +174,39 @@ app.patch('/api/products/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// POST /api/admin/purge-inactive-products — physically delete soft-deleted
+// (active=false) products, but ONLY those not referenced by any existing order
+// (so order history stays intact). Safe to run repeatedly.
+app.post('/api/admin/purge-inactive-products', requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      DELETE FROM products
+       WHERE active = false
+         AND id NOT IN (
+           SELECT DISTINCT product_id FROM orders
+            WHERE product_id IS NOT NULL
+         )
+       RETURNING id, name, size`);
+
+    const counts = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE active = true)  AS active_count,
+        COUNT(*) FILTER (WHERE active = false) AS inactive_count,
+        COUNT(*)                                AS total_count
+      FROM products`);
+
+    res.json({
+      success: true,
+      deleted_count: result.rowCount,
+      deleted_rows: result.rows,
+      counts: counts.rows[0],
+    });
+  } catch (err) {
+    console.error('Purge error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/admin/dedupe-products — one-shot cleanup for duplicate seed rows.
 // Keeps the row with the highest stock per unique (gender, collection, name,
 // size) combo, soft-deletes the rest. Idempotent — running it again is a

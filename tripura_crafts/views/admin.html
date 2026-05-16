@@ -141,8 +141,9 @@
         <h2 class="section-title">Inventory</h2>
         <p class="section-sub">Edit any field or add new products — changes reflect on the storefront immediately</p>
       </div>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <button class="btn-cancel" onclick="dedupeProducts()" title="Removes duplicate rows created by earlier seed re-inserts.">Clean up duplicates</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn-cancel" onclick="dedupeProducts()" title="Soft-delete duplicate rows (keeps highest-stock per product).">Clean up duplicates</button>
+        <button class="btn-danger" onclick="purgeInactive()" title="Physically delete soft-deleted products that no order references.">Purge inactive</button>
         <button class="add-product-btn" onclick="openProductModal()">+ Add Product</button>
       </div>
     </div>
@@ -445,6 +446,21 @@
     if (!confirm(`Delete "${name}"? It will be hidden from the storefront. (Existing orders are preserved.)`)) return;
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
     if (!res.ok) { alert('Delete failed.'); return; }
+    loadInventory();
+  }
+
+  // ── Purge inactive (hard-delete unreferenced soft-deletes) ────────────────
+  async function purgeInactive() {
+    if (!confirm('Physically delete all inactive (soft-deleted) products that no order references? This cannot be undone. Products still tied to existing orders are preserved.')) return;
+    const res = await fetch('/api/admin/purge-inactive-products', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert('Purge failed: ' + (data.error || res.status)); return; }
+    alert(
+      `✓ Permanently deleted ${data.deleted_count} unreferenced inactive row(s).\n\n` +
+      `Active products:   ${data.counts.active_count}\n` +
+      `Still inactive:    ${data.counts.inactive_count}   (referenced by orders — kept for history)\n` +
+      `Total rows in DB:  ${data.counts.total_count}`
+    );
     loadInventory();
   }
 
