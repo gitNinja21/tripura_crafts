@@ -73,20 +73,26 @@ app.get('/home-decor',              (_, res) => res.sendFile(view('home-decor.ht
 app.get('/contact',                 (_, res) => res.sendFile(view('contact.html')));
 app.get('/help',                    (_, res) => res.sendFile(view('help.html')));
 app.get('/track-order',             (_, res) => res.sendFile(view('track-order.html')));
-app.get('/admin', (req, res) => {
+// ── Admin Basic Auth middleware ────────────────────────────────────────────
+// Once the browser caches credentials for /admin, it sends them automatically
+// on subsequent same-origin fetches — so the admin UI's POST/PATCH/DELETE
+// calls are authenticated without any extra wiring on the frontend side.
+function requireAdmin(req, res, next) {
   const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'mwktai2024';
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Basic ')) {
     res.set('WWW-Authenticate', 'Basic realm="Mwktai Admin"');
     return res.status(401).send('Unauthorised');
   }
-  const [user, pass] = Buffer.from(auth.slice(6), 'base64').toString().split(':');
+  const pass = Buffer.from(auth.slice(6), 'base64').toString().split(':')[1];
   if (pass !== ADMIN_PASS) {
     res.set('WWW-Authenticate', 'Basic realm="Mwktai Admin"');
     return res.status(401).send('Unauthorised');
   }
-  res.sendFile(view('admin.html'));
-});
+  next();
+}
+
+app.get('/admin', requireAdmin, (_, res) => res.sendFile(view('admin.html')));
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  API — Products
@@ -108,8 +114,8 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// PATCH /api/products/:id/stock — update stock count
-app.patch('/api/products/:id/stock', async (req, res) => {
+// PATCH /api/products/:id/stock — quick stock-only update (admin)
+app.patch('/api/products/:id/stock', requireAdmin, async (req, res) => {
   try {
     const { stock } = req.body;
     const result = await pool.query(
@@ -117,6 +123,67 @@ app.patch('/api/products/:id/stock', async (req, res) => {
       [stock, req.params.id]
     );
     res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/products — create a new product (admin)
+app.post('/api/products', requireAdmin, async (req, res) => {
+  try {
+    const { gender, collection, name, size, price, stock, image, description } = req.body || {};
+    if (!gender || !collection || !name || price == null || stock == null || !image) {
+      return res.status(400).json({
+        error: 'gender, collection, name, price, stock and image are required',
+      });
+    }
+    const result = await pool.query(
+      `INSERT INTO products (gender, collection, name, size, price, stock, image, description, active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true)
+       RETURNING *`,
+      [gender, collection, name, size || null, price, stock, image, description || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/products/:id — update any subset of fields (admin)
+app.patch('/api/products/:id', requireAdmin, async (req, res) => {
+  try {
+    const allowed = ['gender','collection','name','size','price','stock','image','description','active'];
+    const sets = [];
+    const params = [];
+    for (const f of allowed) {
+      if (req.body[f] !== undefined) {
+        params.push(req.body[f]);
+        sets.push(`${f} = $${params.length}`);
+      }
+    }
+    if (sets.length === 0) return res.status(400).json({ error: 'No fields to update' });
+    params.push(req.params.id);
+    const result = await pool.query(
+      `UPDATE products SET ${sets.join(', ')} WHERE id = $${params.length} RETURNING *`,
+      params
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/products/:id — soft delete (sets active = false). (admin)
+// Soft so existing orders that reference this product still resolve cleanly.
+app.delete('/api/products/:id', requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'UPDATE products SET active = false WHERE id = $1 RETURNING id',
+      [req.params.id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json({ success: true, id: result.rows[0].id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

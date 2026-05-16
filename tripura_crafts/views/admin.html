@@ -75,6 +75,15 @@
     .modal-actions{display:flex;gap:10px;margin-top:22px;justify-content:flex-end;}
     .btn-primary{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;padding:10px 24px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);border:none;border-radius:2px;cursor:pointer;}
     .btn-cancel{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;padding:10px 24px;background:transparent;border:1px solid rgba(200,151,42,0.3);color:rgba(250,243,232,0.5);border-radius:2px;cursor:pointer;}
+    .btn-danger{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.2em;padding:7px 14px;background:transparent;border:1px solid rgba(220,80,80,0.45);color:rgba(220,120,120,0.85);border-radius:2px;cursor:pointer;}
+    .btn-danger:hover{background:rgba(220,80,80,0.1);}
+    .pane-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;}
+    .add-product-btn{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;padding:10px 24px;background:linear-gradient(135deg,var(--gold),#a07020);color:var(--deep);border:none;border-radius:2px;cursor:pointer;}
+    .thumb{width:48px;height:36px;object-fit:cover;border-radius:3px;border:1px solid rgba(200,151,42,0.2);background:#0e0500;}
+    .row-actions{display:flex;gap:6px;align-items:center;}
+    .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;}
+    .modal-grid label{margin-top:14px;}
+    .modal-grid .full{grid-column:1 / -1;}
 
     .summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px;}
     .summary-card{background:#1e0d00;border:1px solid rgba(200,151,42,0.12);border-radius:8px;padding:20px 24px;}
@@ -127,8 +136,13 @@
 
   <!-- ── Inventory pane ── -->
   <div class="pane" id="pane-inventory">
-    <h2 class="section-title">Inventory</h2>
-    <p class="section-sub">Update stock counts — changes save instantly</p>
+    <div class="pane-header">
+      <div>
+        <h2 class="section-title">Inventory</h2>
+        <p class="section-sub">Edit any field or add new products — changes reflect on the storefront immediately</p>
+      </div>
+      <button class="add-product-btn" onclick="openProductModal()">+ Add Product</button>
+    </div>
     <div id="inventory-container"></div>
   </div>
 
@@ -146,6 +160,55 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-primary" onclick="confirmShip()">Confirm Shipped</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product modal (add / edit) -->
+<div class="modal-bg" id="product-modal">
+  <div class="modal" style="max-width:560px;">
+    <h3 id="product-modal-title">Add Product</h3>
+    <input type="hidden" id="product-id"/>
+    <div class="modal-grid">
+      <div>
+        <label>Gender</label>
+        <select id="product-gender">
+          <option value="womens">womens</option>
+          <option value="mens">mens</option>
+        </select>
+      </div>
+      <div>
+        <label>Collection</label>
+        <input type="text" id="product-collection" placeholder="risa, kubai, kamsoi…"/>
+      </div>
+      <div class="full">
+        <label>Product Name</label>
+        <input type="text" id="product-name" placeholder="Risa Heritage Set"/>
+      </div>
+      <div>
+        <label>Size (optional)</label>
+        <input type="text" id="product-size" placeholder="S / M / L  (leave blank if unsized)"/>
+      </div>
+      <div>
+        <label>Price (₹)</label>
+        <input type="number" id="product-price" min="1" placeholder="1499"/>
+      </div>
+      <div>
+        <label>Stock</label>
+        <input type="number" id="product-stock" min="0" placeholder="10"/>
+      </div>
+      <div>
+        <label>Image filename</label>
+        <input type="text" id="product-image" placeholder="risa_1.jpg  (file must exist in /static/)"/>
+      </div>
+      <div class="full">
+        <label>Description</label>
+        <textarea id="product-description" rows="3" placeholder="Full handwoven Risa &amp; Rignai set…"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeProductModal()">Cancel</button>
+      <button class="btn-primary" id="product-save-btn" onclick="saveProduct()">Save Product</button>
     </div>
   </div>
 </div>
@@ -266,15 +329,22 @@
   }
 
   // ── Inventory ─────────────────────────────────────────────────────────────
+  let allProducts = [];
+
   async function loadInventory() {
     const res = await fetch('/api/products');
     const products = await res.json();
+    allProducts = products;
     const el = document.getElementById('inventory-container');
-    if (!products.length) { el.innerHTML = '<div class="empty-state">No products found.</div>'; return; }
+    if (!products.length) {
+      el.innerHTML = '<div class="empty-state">No products yet — click <strong>+ Add Product</strong> to add the first one.</div>';
+      return;
+    }
     el.innerHTML = `
       <table class="inv-table">
         <thead><tr>
-          <th>#</th><th>Collection</th><th>Product</th><th>Size</th><th>Price</th><th>Stock</th><th>Save</th>
+          <th>#</th><th></th><th>Collection</th><th>Product</th><th>Size</th>
+          <th>Price</th><th>Stock</th><th></th>
         </tr></thead>
         <tbody>
           ${products.map(p => {
@@ -282,12 +352,21 @@
             return `
             <tr>
               <td style="color:rgba(200,151,42,0.4);font-family:'Cinzel',serif;font-size:0.7rem">${p.id}</td>
+              <td><img class="thumb" src="/static/${p.image}" alt="${p.name}" onerror="this.style.opacity=0.15"/></td>
               <td style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;color:var(--gold)">${p.collection}</td>
               <td>${p.name}</td>
               <td style="font-family:'Cinzel',serif;font-size:0.8rem">${p.size || '—'}</td>
               <td style="font-family:'Cinzel',serif;color:var(--gold)">₹${Number(p.price).toLocaleString('en-IN')}</td>
-              <td><input class="stock-input ${stockClass}" type="number" min="0" value="${p.stock}" id="stock-${p.id}"/></td>
-              <td><button class="action-btn" onclick="saveStock(${p.id})">Save</button></td>
+              <td>
+                <input class="stock-input ${stockClass}" type="number" min="0" value="${p.stock}" id="stock-${p.id}"/>
+                <button class="action-btn" onclick="saveStock(${p.id})" style="margin-left:6px;">Save</button>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="action-btn" onclick="openProductModal(${p.id})">Edit</button>
+                  <button class="btn-danger" onclick="deleteProduct(${p.id}, '${(p.name||'').replace(/'/g,"\\'")}')">Delete</button>
+                </div>
+              </td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -296,11 +375,73 @@
 
   async function saveStock(id) {
     const stock = parseInt(document.getElementById('stock-' + id).value);
-    await fetch(`/api/products/${id}/stock`, {
+    const res = await fetch(`/api/products/${id}/stock`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stock })
     });
+    if (!res.ok) { alert('Failed to save stock.'); return; }
+    loadInventory();
+  }
+
+  // ── Product modal: add / edit ─────────────────────────────────────────────
+  function openProductModal(id) {
+    const editing = !!id;
+    const p = editing ? allProducts.find(x => x.id === id) : {};
+    document.getElementById('product-modal-title').textContent = editing ? `Edit Product #${id}` : 'Add Product';
+    document.getElementById('product-id').value          = editing ? id : '';
+    document.getElementById('product-gender').value      = p.gender      || 'womens';
+    document.getElementById('product-collection').value  = p.collection  || '';
+    document.getElementById('product-name').value        = p.name        || '';
+    document.getElementById('product-size').value        = p.size        || '';
+    document.getElementById('product-price').value       = p.price       != null ? p.price : '';
+    document.getElementById('product-stock').value       = p.stock       != null ? p.stock : '';
+    document.getElementById('product-image').value       = p.image       || '';
+    document.getElementById('product-description').value = p.description || '';
+    document.getElementById('product-save-btn').textContent = editing ? 'Save Changes' : 'Add Product';
+    document.getElementById('product-modal').classList.add('open');
+  }
+
+  function closeProductModal() {
+    document.getElementById('product-modal').classList.remove('open');
+  }
+
+  async function saveProduct() {
+    const id = document.getElementById('product-id').value;
+    const body = {
+      gender:      document.getElementById('product-gender').value,
+      collection:  document.getElementById('product-collection').value.trim(),
+      name:        document.getElementById('product-name').value.trim(),
+      size:        document.getElementById('product-size').value.trim() || null,
+      price:       parseInt(document.getElementById('product-price').value, 10),
+      stock:       parseInt(document.getElementById('product-stock').value, 10),
+      image:       document.getElementById('product-image').value.trim(),
+      description: document.getElementById('product-description').value.trim() || null,
+    };
+    if (!body.collection || !body.name || !body.image || !Number.isFinite(body.price) || !Number.isFinite(body.stock)) {
+      alert('Collection, name, image, price and stock are required.');
+      return;
+    }
+    const url    = id ? `/api/products/${id}` : '/api/products';
+    const method = id ? 'PATCH' : 'POST';
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert('Save failed: ' + (err.error || res.status));
+      return;
+    }
+    closeProductModal();
+    loadInventory();
+  }
+
+  async function deleteProduct(id, name) {
+    if (!confirm(`Delete "${name}"? It will be hidden from the storefront. (Existing orders are preserved.)`)) return;
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    if (!res.ok) { alert('Delete failed.'); return; }
     loadInventory();
   }
 
