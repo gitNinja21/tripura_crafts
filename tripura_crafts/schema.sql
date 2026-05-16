@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS products (
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
+-- Unique constraint: each product name + size combination must be unique.
+-- COALESCE maps NULL sizes (unsized items) to the sentinel '' so that two
+-- NULL-sized rows for the same name are still caught as duplicates.
+-- The index is created with IF NOT EXISTS so re-running schema.sql is safe.
+CREATE UNIQUE INDEX IF NOT EXISTS products_name_size_uidx
+  ON products (name, COALESCE(size, ''));
+
 -- Orders
 -- One row per order placed by a customer.
 
@@ -91,4 +98,4 @@ INSERT INTO products (gender, collection, name, size, price, stock, image, descr
   ('mens', 'kubai', 'Kubai Ceremonial', 'M', 2099, 6, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.'),
   ('mens', 'kubai', 'Kubai Ceremonial', 'L', 2099, 3, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.')
 
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name, COALESCE(size, '')) DO NOTHING;
