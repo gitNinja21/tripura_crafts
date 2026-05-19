@@ -447,12 +447,14 @@ app.post('/api/orders', async (req, res) => {
     // ── No-DB fallback: persist to orders.json instead. ────────────────────
     if (dbDisabled()) {
       const list = readOrdersFile();
+      // Auto-confirm if Razorpay payment is verified — same rule as DB path.
+      const autoConfirmed = !!razorpay_payment_id;
       const order = {
         id: list.length ? list[0].id + 1 : 1,
         product_id, product_name,
         customer_name, customer_phone, customer_email, customer_address,
         size, quantity: quantity || 1, price_paid,
-        status: 'received',
+        status: autoConfirmed ? 'confirmed' : 'received',
         razorpay_order_id: razorpay_order_id || null,
         razorpay_payment_id: razorpay_payment_id || null,
         payment_status,
@@ -462,24 +464,48 @@ app.post('/api/orders', async (req, res) => {
       writeOrdersFile(list);
       console.log(`Order #${order.id} saved to orders.json (no DATABASE_URL).`);
       notifyAdmin(order).catch(e => console.error('Admin email failed:', e));
+      if (autoConfirmed) {
+        notifyCustomerConfirmed(order).catch(e => console.error('Customer confirm email failed:', e));
+      }
       return res.status(201).json({ success: true, order_id: order.id, storage: 'file' });
     }
 
-    // ── Idempotency: in the Razorpay flow, create-order already reserved
-    //    stock and inserted this order. Don't insert a duplicate or decrement
-    //    stock a second time — just confirm the existing row, and send the
-    //    admin notification here (create-order can't, payment isn't done yet). ─
+    // ── Idempotency + auto-confirm. In the Razorpay flow, create-order
+    //    already reserved stock and inserted this order as 'received'. Since
+    //    payment is now verified, advance status → 'confirmed' atomically
+    //    (idempotent: only fires the *first* call; later calls match 0 rows).
+    //    On that first call, fire both the admin and the customer-confirmed
+    //    emails. Later calls just return the existing row. ───────────────────
     if (razorpay_order_id) {
+      const promoted = await pool.query(
+        `UPDATE orders
+            SET status = 'confirmed'
+          WHERE razorpay_order_id = $1 AND status = 'received'
+          RETURNING *`,
+        [razorpay_order_id]
+      );
+
+      if (promoted.rowCount > 0) {
+        const row = promoted.rows[0];
+        const enriched = { ...row, product_name: product_name || row.product_name };
+        notifyAdmin(enriched)
+          .catch(e => console.error('Admin email failed:', e));
+        notifyCustomerConfirmed(enriched)
+          .catch(e => console.error('Customer confirm email failed:', e));
+        return res.status(201).json({
+          success: true, order_id: row.id, reserved: true, confirmed: true,
+        });
+      }
+
+      // Already past 'received' (e.g. retry of the same /api/orders call) —
+      // just fetch and return the row idempotently. No emails.
       const existing = await pool.query(
         'SELECT * FROM orders WHERE razorpay_order_id = $1 LIMIT 1',
         [razorpay_order_id]
       );
       if (existing.rowCount > 0) {
-        const row = existing.rows[0];
-        notifyAdmin({ ...row, product_name: product_name || row.product_name })
-          .catch(e => console.error('Admin email failed:', e));
         return res.status(201).json({
-          success: true, order_id: row.id, reserved: true,
+          success: true, order_id: existing.rows[0].id, reserved: true,
         });
       }
     }
