@@ -655,8 +655,12 @@ const RESERVATION_TTL_MIN = 20;
 
 async function sweepStaleReservations() {
   if (dbDisabled()) return;
-  const client = await pool.connect();
+  // pool.connect() is INSIDE the try — if the DB is unreachable it throws,
+  // and an unhandled rejection from this setInterval callback would crash
+  // the whole process. Catching it here keeps the site alive.
+  let client;
   try {
+    client = await pool.connect();
     await client.query('BEGIN');
     const stale = await client.query(
       `SELECT id, product_id, quantity FROM orders
@@ -682,13 +686,22 @@ async function sweepStaleReservations() {
       console.log(`Reservation sweep: released ${stale.rowCount} abandoned reservation(s).`);
     }
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
+    if (client) await client.query('ROLLBACK').catch(() => {});
     console.error('Reservation sweep error:', err.message);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
-setInterval(sweepStaleReservations, 5 * 60 * 1000);
+setInterval(() => { sweepStaleReservations().catch(e => console.error('Sweep crashed:', e.message)); },
+            5 * 60 * 1000);
+
+// ── Last-resort safety net: never let a stray async error crash the process.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection (ignored):', reason && reason.message ? reason.message : reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception (ignored):', err && err.message ? err.message : err);
+});
 
 // ── Fallback → home ────────────────────────────────────────────────────────
 app.use((_, res) => res.redirect('/'));
