@@ -340,11 +340,15 @@
   // ── Inventory ─────────────────────────────────────────────────────────────
   let allProducts = [];
 
-  // Image src resolver: full http(s) URLs (Cloudinary) used as-is; bare
-  // filenames (legacy products) served from /static/.
+  // Bare filenames → /static/. Cloudinary URLs get auto-format, auto-quality
+  // and a 1400px width cap injected — so uploads are compressed on delivery.
   function imgSrc(img) {
     if (!img) return '';
-    return /^https?:\/\//i.test(img) ? img : '/static/' + img;
+    if (!/^https?:\/\//i.test(img)) return '/static/' + img;
+    if (img.includes('res.cloudinary.com') && img.includes('/upload/')) {
+      return img.replace('/upload/', '/upload/f_auto,q_auto,w_1400,c_limit/');
+    }
+    return img;
   }
 
   async function loadInventory() {
