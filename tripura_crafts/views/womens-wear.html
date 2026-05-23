@@ -259,47 +259,34 @@
   },{threshold:0.1});
   document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
-  // Collections → array of products
-  const collections = {
-    risa: {
-      label: 'Risa Royale — Tripuri Collection',
-      items: [
-        {
-          img: '/static/risa_1.jpg',
-          name: 'Risa Heritage Set',
-          desc: 'Full handwoven Risa & Rignai set on traditional pit looms. Each piece unique. Ships in 5–7 days.',
-          price: '₹ 1,499',
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Risa%20Heritage%20Set%20%28%E2%82%B91%2C499%29%20from%20Mwktai.',
-          test: true
-        },
-        {
-          img: '/static/risa_2.jpg',
-          name: 'Risa Classic Wrap',
-          desc: 'TEST PRICE — ₹1 for Razorpay live smoke test. Revert to ₹899 before public launch.',
-          price: '₹ 1',
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Risa%20Classic%20Wrap%20%28%E2%82%B9899%29%20from%20Mwktai.',
-          test: true
-        },
-        {
-          img: '/static/risa_3.jpg',
-          name: 'Risa Ceremonial Set',
-          desc: 'Premium Risa & Rignai in silk-blend thread, made for festivals and weddings.',
-          price: '₹ 2,199',
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Risa%20Ceremonial%20Set%20%28%E2%82%B92%2C199%29%20from%20Mwktai.',
-          test: true
-        }
-      ]
-    },
-    reang: null,
-    pinon: null,
-    jamatia: null,
-    mog: null,
-    hill: null
+  // Collection display labels — PRESENTATION ONLY.
+  // Product data (names, prices, images, descriptions, stock) is the DB's
+  // job: it's fetched live from /api/products so the storefront, the admin
+  // tab, and inventory always agree. One source of truth.
+  const collectionLabels = {
+    risa:    'Risa Royale — Tripuri Collection',
+    reang:   'Reang Collection',
+    pinon:   'Pinon Collection',
+    jamatia: 'Jamatia Collection',
+    mog:     'Mog Collection',
+    hill:    'Hill Collection',
   };
 
   const comingSoon = `<div class="coming-drawer"><p>We're still weaving this one together.<br/>Check back soon — good things take time.</p></div>`;
 
   let activeKey = null;
+
+  function formatPrice(n) {
+    return '₹ ' + Number(n).toLocaleString('en-IN');
+  }
+  function escAttr(s) {
+    return String(s).replace(/'/g, "\\'");
+  }
+  // Full http(s) URLs (Cloudinary) used as-is; bare filenames from /static/.
+  function imgSrc(img) {
+    if (!img) return '';
+    return /^https?:\/\//i.test(img) ? img : '/static/' + img;
+  }
 
   async function openDrawer(key) {
     const drawer = document.getElementById('product-drawer');
@@ -320,39 +307,41 @@
     if (idx >= 0) cards[idx >= 3 ? idx + 1 : idx].classList.add('active');
 
     activeKey = key;
-    const coll = collections[key];
+    inner.innerHTML = `<div class="coming-drawer"><p>Loading…</p></div>`;
+    drawer.classList.add('open');
 
-    if (coll) {
-      const liveProducts = await fetch('/api/products?gender=womens')
-        .then(r => r.ok ? r.json() : [])
-        .then(d => Array.isArray(d) ? d : [])
-        .catch(() => []);
-      const cards_html = coll.items.map(p => {
-        const live = liveProducts.find(lp => lp.name === p.name);
-        const inStock = !live || live.stock > 0;
+    // Pull this collection's products straight from the DB.
+    const products = await fetch(`/api/products?gender=womens&collection=${encodeURIComponent(key)}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(d => Array.isArray(d) ? d : [])
+      .catch(() => []);
+
+    if (products.length === 0) {
+      inner.innerHTML = comingSoon;
+    } else {
+      const cards_html = products.map(p => {
+        const inStock   = p.stock > 0;
+        const priceStr  = formatPrice(p.price);
+        const sizeArg   = p.size ? `'${escAttr(p.size)}'` : 'null';
         const buyBtn = inStock
-          ? `<button class="buy-btn" onclick="openOrderModal('${p.name.replace(/'/g,"\\'")}', '${p.price}', null)">BUY NOW</button>`
+          ? `<button class="buy-btn" onclick="openOrderModal('${escAttr(p.name)}', '${priceStr}', ${sizeArg})">BUY NOW</button>`
           : `<button class="buy-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px solid rgba(200,151,42,0.3);color:rgba(250,243,232,0.4);">OUT OF STOCK</button>`;
         return `
         <div class="pcard">
-          <div class="pcard-img"><img src="${p.img}" alt="${p.name}"/></div>
+          <div class="pcard-img"><img src="${imgSrc(p.image)}" alt="${p.name}"/></div>
           <div class="pcard-body">
-            <div class="pcard-name">${p.name}</div>
-            <div class="pcard-desc">${p.desc}</div>
-            <div class="pcard-price">${p.price}</div>
+            <div class="pcard-name">${p.name}${p.size ? ' — Size ' + p.size : ''}</div>
+            <div class="pcard-desc">${p.description || ''}</div>
+            <div class="pcard-price">${priceStr}</div>
             ${buyBtn}
-            ${p.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
           </div>
         </div>`;
       }).join('');
       inner.innerHTML = `
-        <div class="drawer-heading">✦ &nbsp; ${coll.label} &nbsp; ✦</div>
+        <div class="drawer-heading">✦ &nbsp; ${collectionLabels[key] || key} &nbsp; ✦</div>
         <div class="drawer-grid">${cards_html}</div>`;
-    } else {
-      inner.innerHTML = comingSoon;
     }
 
-    drawer.classList.add('open');
     setTimeout(() => drawer.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
   }
 

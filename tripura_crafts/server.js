@@ -174,6 +174,16 @@ app.patch('/api/products/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/upload-config — Cloudinary cloud name + unsigned upload
+// preset for the admin image uploader. Neither value is secret (both are
+// designed to be used from the browser); the API SECRET is never exposed.
+app.get('/api/admin/upload-config', requireAdmin, (req, res) => {
+  res.json({
+    cloud_name:    process.env.CLOUDINARY_CLOUD_NAME    || '',
+    upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || '',
+  });
+});
+
 // POST /api/admin/purge-inactive-products — physically delete soft-deleted
 // (active=false) products, but ONLY those not referenced by any existing order
 // (so order history stays intact). Safe to run repeatedly.
@@ -203,40 +213,6 @@ app.post('/api/admin/purge-inactive-products', requireAdmin, async (req, res) =>
     });
   } catch (err) {
     console.error('Purge error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST /api/admin/seed-jewellery — one-shot insert of the 4 jewellery products.
-// Idempotent: skips any product whose name already exists. Edit names/prices
-// afterwards from the Inventory tab if you want different values.
-app.post('/api/admin/seed-jewellery', requireAdmin, async (req, res) => {
-  try {
-    const items = [
-      ['jewellery', 'silver', 'Silver Torque Necklace', 1599, 8, 'jwl_1.jpg',
-       'Hand-hammered silver torque, forged by Tripura silversmiths — a statement neckpiece.'],
-      ['jewellery', 'silver', 'Tribal Coin Necklace',   1799, 8, 'jwl_2.jpg',
-       'Layered silver-coin necklace in the traditional Mwktai style.'],
-      ['jewellery', 'silver', 'Hand-Hammered Earrings', 1899, 8, 'jwl_3.jpg',
-       'Artisan silver earrings with hand-hammered texture and tribal motifs.'],
-      ['jewellery', 'silver', 'Mwktai Heritage Set',    1999, 8, 'jwl_4.jpg',
-       'Premium silver set — necklace and earrings, made for ceremonies and festivals.'],
-    ];
-    const inserted = [];
-    for (const [gender, collection, name, price, stock, image, description] of items) {
-      const exists = await pool.query('SELECT 1 FROM products WHERE name = $1 LIMIT 1', [name]);
-      if (exists.rowCount === 0) {
-        const r = await pool.query(
-          `INSERT INTO products (gender, collection, name, size, price, stock, image, description, active)
-           VALUES ($1,$2,$3,NULL,$4,$5,$6,$7,true) RETURNING id, name, price`,
-          [gender, collection, name, price, stock, image, description]
-        );
-        inserted.push(r.rows[0]);
-      }
-    }
-    res.json({ success: true, inserted_count: inserted.length, inserted });
-  } catch (err) {
-    console.error('Seed jewellery error:', err);
     res.status(500).json({ error: err.message });
   }
 });

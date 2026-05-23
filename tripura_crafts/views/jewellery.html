@@ -148,6 +148,8 @@
 
   function formatPrice(n) { return '₹ ' + Number(n).toLocaleString('en-IN'); }
   function escAttr(s)     { return String(s).replace(/'/g, "\\'"); }
+  // Full http(s) URLs (Cloudinary) used as-is; bare filenames from /static/.
+  function imgSrc(img)    { return !img ? '' : (/^https?:\/\//i.test(img) ? img : '/static/' + img); }
 
   async function loadProducts() {
     const grid = document.getElementById('product-grid');
@@ -170,7 +172,7 @@
         : `<button class="buy-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px solid rgba(200,151,42,0.3);color:rgba(250,243,232,0.4);box-shadow:none;">OUT OF STOCK</button>`;
       return `
       <div class="pcard">
-        <div class="pcard-img"><img src="/static/${p.image}" alt="${p.name}"/></div>
+        <div class="pcard-img"><img src="${imgSrc(p.image)}" alt="${p.name}"/></div>
         <div class="pcard-body">
           <div class="pcard-name">${p.name}</div>
           <div class="pcard-desc">${p.description || ''}</div>

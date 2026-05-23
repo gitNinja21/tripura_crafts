@@ -252,57 +252,32 @@
   },{threshold:0.1});
   document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
-  const collections = {
-    kubai: {
-      label: "Kubai — Tripuri Collection",
-      items: [
-        {
-          img: '/static/kubai_1.jpg',
-          name: 'Kubai Heritage Shirt',
-          desc: 'Handwoven in crimson and gold stripes on pit looms. Worn during ceremonies — now available year-round.',
-          price: '₹ 1,299',
-          sizes: ['S','M','L'],
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Heritage%20Shirt%20%28%E2%82%B91%2C299%29%20-%20Size%3A%20',
-          test: true
-        },
-        {
-          img: '/static/kubai_2.jpg',
-          name: 'Kubai Everyday',
-          desc: 'Lighter cotton Kubai for daily wear — the classic Tripuri stripe in a breathable weave.',
-          price: '₹ 849',
-          sizes: ['S','M','L'],
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Everyday%20%28%E2%82%B9849%29%20-%20Size%3A%20',
-          test: true
-        },
-        {
-          img: '/static/kubai_3.jpg',
-          name: 'Kubai Ceremonial',
-          desc: 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.',
-          price: '₹ 2,099',
-          sizes: ['S','M','L'],
-          waLink: 'https://wa.me/91XXXXXXXXXX?text=Hi%2C%20I%20want%20to%20order%20the%20Kubai%20Ceremonial%20%28%E2%82%B92%2C099%29%20-%20Size%3A%20',
-          test: true
-        }
-      ]
-    },
-    kamsoi: null,
-    jummosulum: null,
-    tuti: null
+  // Collection display labels — PRESENTATION ONLY.
+  // Product data (names, prices, images, descriptions, per-size stock) is the
+  // DB's job: fetched live from /api/products so storefront, admin tab, and
+  // inventory always agree. One source of truth.
+  const collectionLabels = {
+    kubai:      'Kubai — Tripuri Collection',
+    kamsoi:     'Kamsoi Collection',
+    jummosulum: 'Jummosulum Collection',
+    tuti:       'Tuti Collection',
   };
 
   const comingSoon = `<div class="coming-drawer"><p>We're still weaving this one together.<br/>Check back soon — good things take time.</p></div>`;
 
-  function selectSize(btn, cardId) {
-    // Highlight selected size button
-    const row = btn.closest('.size-row');
-    row.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    // Update the Buy Now link to include the selected size
-    const card = btn.closest('.pcard');
-    const base = card.dataset.waBase;
-    const size = btn.textContent;
-    const buyBtn = card.querySelector('.buy-btn');
-    buyBtn.href = base + encodeURIComponent(size) + '%20-%20from%20Mwktai.';
+  // Size sort order — 1-based so `|| 99` works for unknown sizes.
+  const SIZE_ORDER = { S: 1, M: 2, L: 3, XL: 4, XXL: 5 };
+
+  function formatPrice(n) {
+    return '₹ ' + Number(n).toLocaleString('en-IN');
+  }
+  function escAttr(s) {
+    return String(s).replace(/'/g, "\\'");
+  }
+  // Full http(s) URLs (Cloudinary) used as-is; bare filenames from /static/.
+  function imgSrc(img) {
+    if (!img) return '';
+    return /^https?:\/\//i.test(img) ? img : '/static/' + img;
   }
 
   let activeKey = null;
@@ -326,49 +301,76 @@
     if (idx >= 0) cards[idx >= 2 ? idx + 1 : idx].classList.add('active');
 
     activeKey = key;
-    const coll = collections[key];
+    inner.innerHTML = `<div class="coming-drawer"><p>Loading…</p></div>`;
+    drawer.classList.add('open');
 
-    if (coll) {
-      const liveProducts = await fetch('/api/products?gender=mens')
-        .then(r => r.ok ? r.json() : [])
-        .then(d => Array.isArray(d) ? d : [])
-        .catch(() => []);
-      const cards_html = coll.items.map(p => {
-        // For sized products, check if ANY size is in stock
-        const liveVariants = liveProducts.filter(lp => lp.name === p.name);
-        const anySizeInStock = liveVariants.length === 0 || liveVariants.some(lp => lp.stock > 0);
-        const sizeHtml = p.sizes ? `
-          <div class="size-row" id="sizes-${p.name.replace(/\s/g,'-')}">
-            ${p.sizes.map(s => {
-              const variant = liveVariants.find(lp => lp.size === s);
-              const sizeOut = variant && variant.stock === 0;
-              return `<button class="size-btn${sizeOut ? ' size-out' : ''}" ${sizeOut ? 'disabled title="Out of stock"' : `onclick="selectSize(this,'${p.name.replace(/'/g,"\\'")}','${s}')"`}>${s}${sizeOut ? ' ✕' : ''}</button>`;
+    // Pull this collection's variants straight from the DB.
+    const rows = await fetch(`/api/products?gender=mens&collection=${encodeURIComponent(key)}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(d => Array.isArray(d) ? d : [])
+      .catch(() => []);
+
+    if (rows.length === 0) {
+      inner.innerHTML = comingSoon;
+    } else {
+      // Group variant rows by product name (one card per product, sizes inside).
+      const byName = {};
+      rows.forEach(r => {
+        if (!byName[r.name]) {
+          byName[r.name] = {
+            name:        r.name,
+            price:       r.price,
+            image:       r.image,
+            description: r.description,
+            variants:    [],
+          };
+        }
+        byName[r.name].variants.push({ size: r.size, stock: r.stock });
+      });
+
+      const cards_html = Object.values(byName).map(p => {
+        p.variants.sort((a, b) =>
+          (SIZE_ORDER[a.size] || 99) - (SIZE_ORDER[b.size] || 99));
+        const anyInStock = p.variants.some(v => v.stock > 0);
+        const priceStr   = formatPrice(p.price);
+        const nameAttr   = escAttr(p.name);
+
+        // Unsized products: skip the size row entirely.
+        const sized = p.variants.some(v => v.size);
+        const sizeHtml = sized ? `
+          <div class="size-row">
+            ${p.variants.map(v => {
+              const out = v.stock <= 0;
+              const sizeAttr = escAttr(v.size || '');
+              return `<button class="size-btn${out ? ' size-out' : ''}"
+                ${out
+                  ? 'disabled title="Out of stock"'
+                  : `onclick="selectSize(this,'${nameAttr}','${sizeAttr}')"`}>${v.size}${out ? ' ✕' : ''}</button>`;
             }).join('')}
           </div>` : '';
-        const buyBtn = anySizeInStock
-          ? `<button class="buy-btn" onclick="openOrderModal('${p.name.replace(/'/g,"\\'")}','${p.price}',selectedSizes['${p.name.replace(/'/g,"\\'")}']||null)">BUY NOW</button>`
+
+        const buyBtn = anyInStock
+          ? `<button class="buy-btn" onclick="openOrderModal('${nameAttr}','${priceStr}',selectedSizes['${nameAttr}']||null)">BUY NOW</button>`
           : `<button class="buy-btn" disabled style="opacity:0.4;cursor:not-allowed;background:transparent;border:1px solid rgba(200,151,42,0.3);color:rgba(250,243,232,0.4);">OUT OF STOCK</button>`;
+
         return `
         <div class="pcard">
-          <div class="pcard-img"><img src="${p.img}" alt="${p.name}"/></div>
+          <div class="pcard-img"><img src="${imgSrc(p.image)}" alt="${p.name}"/></div>
           <div class="pcard-body">
             <div class="pcard-name">${p.name}</div>
-            <div class="pcard-desc">${p.desc}</div>
-            <div class="pcard-price">${p.price}</div>
+            <div class="pcard-desc">${p.description || ''}</div>
+            <div class="pcard-price">${priceStr}</div>
             ${sizeHtml}
             ${buyBtn}
-            ${p.test ? '<span class="test-badge">[ TEST ]</span>' : ''}
           </div>
         </div>`;
       }).join('');
+
       inner.innerHTML = `
-        <div class="drawer-heading">✦ &nbsp; ${coll.label} &nbsp; ✦</div>
+        <div class="drawer-heading">✦ &nbsp; ${collectionLabels[key] || key} &nbsp; ✦</div>
         <div class="drawer-grid">${cards_html}</div>`;
-    } else {
-      inner.innerHTML = comingSoon;
     }
 
-    drawer.classList.add('open');
     setTimeout(() => drawer.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
   }
 
