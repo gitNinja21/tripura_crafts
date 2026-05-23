@@ -207,6 +207,40 @@ app.post('/api/admin/purge-inactive-products', requireAdmin, async (req, res) =>
   }
 });
 
+// POST /api/admin/seed-jewellery — one-shot insert of the 4 jewellery products.
+// Idempotent: skips any product whose name already exists. Edit names/prices
+// afterwards from the Inventory tab if you want different values.
+app.post('/api/admin/seed-jewellery', requireAdmin, async (req, res) => {
+  try {
+    const items = [
+      ['jewellery', 'silver', 'Silver Torque Necklace', 1599, 8, 'jwl_1.jpg',
+       'Hand-hammered silver torque, forged by Tripura silversmiths — a statement neckpiece.'],
+      ['jewellery', 'silver', 'Tribal Coin Necklace',   1799, 8, 'jwl_2.jpg',
+       'Layered silver-coin necklace in the traditional Mwktai style.'],
+      ['jewellery', 'silver', 'Hand-Hammered Earrings', 1899, 8, 'jwl_3.jpg',
+       'Artisan silver earrings with hand-hammered texture and tribal motifs.'],
+      ['jewellery', 'silver', 'Mwktai Heritage Set',    1999, 8, 'jwl_4.jpg',
+       'Premium silver set — necklace and earrings, made for ceremonies and festivals.'],
+    ];
+    const inserted = [];
+    for (const [gender, collection, name, price, stock, image, description] of items) {
+      const exists = await pool.query('SELECT 1 FROM products WHERE name = $1 LIMIT 1', [name]);
+      if (exists.rowCount === 0) {
+        const r = await pool.query(
+          `INSERT INTO products (gender, collection, name, size, price, stock, image, description, active)
+           VALUES ($1,$2,$3,NULL,$4,$5,$6,$7,true) RETURNING id, name, price`,
+          [gender, collection, name, price, stock, image, description]
+        );
+        inserted.push(r.rows[0]);
+      }
+    }
+    res.json({ success: true, inserted_count: inserted.length, inserted });
+  } catch (err) {
+    console.error('Seed jewellery error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/admin/dedupe-products — one-shot cleanup for duplicate seed rows.
 // Keeps the row with the highest stock per unique (gender, collection, name,
 // size) combo, soft-deletes the rest. Idempotent — running it again is a

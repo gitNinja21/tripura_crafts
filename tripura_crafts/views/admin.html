@@ -142,6 +142,7 @@
         <p class="section-sub">Edit any field or add new products — changes reflect on the storefront immediately</p>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn-cancel" onclick="seedJewellery()" title="Insert the 4 jewellery products (jwl_1–4). Safe to click once.">Seed jewellery</button>
         <button class="btn-cancel" onclick="dedupeProducts()" title="Soft-delete duplicate rows (keeps highest-stock per product).">Clean up duplicates</button>
         <button class="btn-danger" onclick="purgeInactive()" title="Physically delete soft-deleted products that no order references.">Purge inactive</button>
         <button class="add-product-btn" onclick="openProductModal()">+ Add Product</button>
@@ -175,10 +176,11 @@
     <input type="hidden" id="product-id"/>
     <div class="modal-grid">
       <div>
-        <label>Gender</label>
+        <label>Gender / Category</label>
         <select id="product-gender">
           <option value="womens">womens</option>
           <option value="mens">mens</option>
+          <option value="jewellery">jewellery</option>
         </select>
       </div>
       <div>
@@ -460,6 +462,19 @@
       `Active products:   ${data.counts.active_count}\n` +
       `Still inactive:    ${data.counts.inactive_count}   (referenced by orders — kept for history)\n` +
       `Total rows in DB:  ${data.counts.total_count}`
+    );
+    loadInventory();
+  }
+
+  // ── One-shot jewellery seed ───────────────────────────────────────────────
+  async function seedJewellery() {
+    if (!confirm('Insert the 4 jewellery products (Silver Torque Necklace, Tribal Coin Necklace, Hand-Hammered Earrings, Mwktai Heritage Set)? Already-existing names are skipped.')) return;
+    const res = await fetch('/api/admin/seed-jewellery', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert('Seed failed: ' + (data.error || res.status)); return; }
+    alert(
+      `✓ Inserted ${data.inserted_count} jewellery product(s).` +
+      (data.inserted_count === 0 ? '\n\n(All 4 already exist — nothing to do.)' : '\n\nEdit names / prices anytime from this tab.')
     );
     loadInventory();
   }
