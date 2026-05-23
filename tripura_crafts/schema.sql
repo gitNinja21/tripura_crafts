@@ -51,6 +51,12 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_order_id   VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_payment_id VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status      VARCHAR(20) NOT NULL DEFAULT 'pending';
 
+-- Bengali translations of product text (auto-filled by the Sarvam API on
+-- product save; admin stays English-only — these columns are never edited
+-- by hand).
+ALTER TABLE products ADD COLUMN IF NOT EXISTS name_bn        VARCHAR(200);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS description_bn TEXT;
+
 -- Auto-update updated_at on every status change
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
@@ -99,3 +105,29 @@ BEGIN
       ('mens', 'kubai', 'Kubai Ceremonial', 'L', 2099, 3, 'kubai_3.jpg', 'Premium silk-blend Kubai with dense gold border work — made for weddings and festivals.');
   END IF;
 END $$;
+
+-- ─────────────────────────────────────────────
+--  Jewellery products (added v3)
+-- ─────────────────────────────────────────────
+-- Idempotent per-product: each row is inserted only if a product with that
+-- name doesn't already exist. Runs on every deploy but never duplicates.
+-- Edit names / prices afterwards from the admin Inventory tab.
+INSERT INTO products (gender, collection, name, size, price, stock, image, description)
+SELECT 'jewellery', 'silver', 'Silver Torque Necklace', NULL, 1599, 8, 'jwl_1.jpg',
+       'Hand-hammered silver torque, forged by Tripura silversmiths — a statement neckpiece.'
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Silver Torque Necklace');
+
+INSERT INTO products (gender, collection, name, size, price, stock, image, description)
+SELECT 'jewellery', 'silver', 'Tribal Coin Necklace', NULL, 1799, 8, 'jwl_2.jpg',
+       'Layered silver-coin necklace in the traditional Mwktai style.'
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Tribal Coin Necklace');
+
+INSERT INTO products (gender, collection, name, size, price, stock, image, description)
+SELECT 'jewellery', 'silver', 'Hand-Hammered Earrings', NULL, 1899, 8, 'jwl_3.jpg',
+       'Artisan silver earrings with hand-hammered texture and tribal motifs.'
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Hand-Hammered Earrings');
+
+INSERT INTO products (gender, collection, name, size, price, stock, image, description)
+SELECT 'jewellery', 'silver', 'Mwktai Heritage Set', NULL, 1999, 8, 'jwl_4.jpg',
+       'Premium silver set — necklace and earrings, made for ceremonies and festivals.'
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Mwktai Heritage Set');

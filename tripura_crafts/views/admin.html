@@ -142,6 +142,7 @@
         <p class="section-sub">Edit any field or add new products — changes reflect on the storefront immediately</p>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn-cancel" onclick="translateProductsBn()" title="Fill in Bengali translations for any products that don't have them yet.">Translate to Bengali</button>
         <button class="btn-cancel" onclick="dedupeProducts()" title="Soft-delete duplicate rows (keeps highest-stock per product).">Clean up duplicates</button>
         <button class="btn-danger" onclick="purgeInactive()" title="Physically delete soft-deleted products that no order references.">Purge inactive</button>
         <button class="add-product-btn" onclick="openProductModal()">+ Add Product</button>
@@ -552,6 +553,15 @@
       `Total rows in DB:  ${data.counts.total_count}`
     );
     loadInventory();
+  }
+
+  // ── Backfill Bengali translations via Sarvam ──────────────────────────────
+  async function translateProductsBn() {
+    if (!confirm('Translate all products that don’t yet have Bengali text? Uses the Sarvam API. May take a few seconds.')) return;
+    const res = await fetch('/api/admin/translate-products', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert('Translation failed: ' + (data.error || res.status)); return; }
+    alert(`✓ Translated ${data.translated_count} product(s) to Bengali.`);
   }
 
   // ── One-shot duplicate cleanup ────────────────────────────────────────────

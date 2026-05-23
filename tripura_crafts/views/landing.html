@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mwktai — Tripura Craftsmen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cormorant+Garamond:wght@300;400;600&family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+Bengali:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--gold:#C8972A;--deep:#1A0A00;--cream:#FAF3E8;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Cormorant Garamond',serif;background:var(--deep);color:var(--cream);
+         min-height:100vh;display:flex;flex-direction:column;}
+    .tribal-bar{height:6px;background:repeating-linear-gradient(90deg,#8B1A1A 0,#8B1A1A 12px,#C8972A 12px,#C8972A 24px,#1A0A00 24px,#1A0A00 36px,#C8972A 36px,#C8972A 48px);}
+    main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+         padding:60px 24px;text-align:center;
+         background:radial-gradient(ellipse at 50% 35%,#3d1a00 0%,#1A0A00 72%);}
+    .brand{font-family:'Cinzel Decorative',serif;letter-spacing:0.06em;
+           font-size:clamp(3rem,11vw,5.5rem);
+           background:linear-gradient(135deg,#FAF3E8 18%,var(--gold) 62%);
+           -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+           margin-bottom:10px;animation:fadeUp 0.9s ease both;}
+    .tagline{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.34em;
+             color:rgba(250,243,232,0.4);text-transform:uppercase;margin-bottom:8px;
+             animation:fadeUp 0.9s 0.1s ease both;}
+    .sub{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;
+         color:rgba(250,243,232,0.5);margin-bottom:48px;animation:fadeUp 0.9s 0.15s ease both;}
+    .gold-bar{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+              margin:0 auto 40px;animation:fadeUp 0.9s 0.2s ease both;}
+    .prompt{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.3em;
+            color:var(--gold);text-transform:uppercase;margin-bottom:24px;
+            animation:fadeUp 0.9s 0.25s ease both;}
+    .lang-row{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;
+              animation:fadeUp 0.9s 0.3s ease both;}
+    .lang-btn{min-width:200px;padding:22px 36px;background:#1e0d00;
+              border:1px solid rgba(200,151,42,0.35);border-radius:8px;cursor:pointer;
+              color:var(--cream);transition:all 0.3s;}
+    .lang-btn:hover{transform:translateY(-5px);border-color:var(--gold);
+                    box-shadow:0 12px 32px rgba(200,151,42,0.22);}
+    .lang-name{font-size:1.7rem;margin-bottom:4px;}
+    .lang-en .lang-name{font-family:'Playfair Display',serif;font-weight:700;}
+    .lang-bn .lang-name{font-family:'Noto Serif Bengali',serif;font-weight:600;}
+    .lang-note{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.22em;
+               color:rgba(250,243,232,0.4);text-transform:uppercase;}
+    footer{padding:24px;text-align:center;font-family:'Cinzel',serif;
+           font-size:0.5rem;letter-spacing:0.2em;color:rgba(250,243,232,0.2);}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(26px);}to{opacity:1;transform:translateY(0);}}
+  </style>
+</head>
+<body>
+<div class="tribal-bar"></div>
+<main>
+  <div class="brand">Mwktai</div>
+  <p class="tagline">Tripura Craftsmen</p>
+  <p class="sub">Indigenous handloom &amp; bamboo crafts</p>
+  <div class="gold-bar"></div>
+  <p class="prompt">Choose your language · ভাষা নির্বাচন করুন</p>
+  <div class="lang-row">
+    <button class="lang-btn lang-en" onclick="choose('en')">
+      <div class="lang-name">English</div>
+      <div class="lang-note">Continue in English</div>
+    </button>
+    <button class="lang-btn lang-bn" onclick="choose('bn')">
+      <div class="lang-name">বাংলা</div>
+      <div class="lang-note">বাংলায় এগিয়ে যান</div>
+    </button>
+  </div>
+</main>
+<footer>© 2025 MWKTAI · ALL RIGHTS RESERVED</footer>
+<script>
+  function choose(lang) {
+    // Remember the choice for a year, then enter the site.
+    document.cookie = 'mwktai_lang=' + lang + ';path=/;max-age=31536000';
+    try { localStorage.setItem('mwktai_lang', lang); } catch (e) {}
+    window.location.href = '/';
+  }
+</script>
+</body>
+</html>

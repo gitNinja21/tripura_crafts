@@ -63,8 +63,15 @@ const NAV_MAP = {
 app.get('/', (req, res) => {
   const nav = req.query.nav;
   if (nav && NAV_MAP[nav]) return res.redirect(NAV_MAP[nav]);
+  // First visit (no language chosen) → show the language landing page.
+  const cookie = req.headers.cookie || '';
+  if (!/(?:^|;\s*)mwktai_lang=/.test(cookie)) {
+    return res.sendFile(view('landing.html'));
+  }
   res.sendFile(view('index.html'));
 });
+// Direct route to the landing page (used by the nav language switcher).
+app.get('/language', (_, res) => res.sendFile(view('landing.html')));
 app.get('/womens-wear',             (_, res) => res.sendFile(view('womens-wear.html')));
 app.get('/womens-wear/:collection', (_, res) => res.sendFile(view('womens-wear.html')));
 app.get('/mens-wear',               (_, res) => res.sendFile(view('mens-wear.html')));
@@ -93,6 +100,60 @@ function requireAdmin(req, res, next) {
 }
 
 app.get('/admin', requireAdmin, (_, res) => res.sendFile(view('admin.html')));
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Sarvam AI — English → Bengali translation
+// ═══════════════════════════════════════════════════════════════════════════
+// Translates one English string to Bengali. Returns null on any failure so a
+// translation hiccup never blocks a product save.
+async function translateToBengali(text) {
+  if (!text || !process.env.SARVAM_API_KEY) return null;
+  try {
+    const resp = await fetch('https://api.sarvam.ai/translate', {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': process.env.SARVAM_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        input: String(text).slice(0, 1900),
+        source_language_code: 'en-IN',
+        target_language_code: 'bn-IN',
+        speaker_gender: 'Male',
+        mode: 'formal',
+        model: 'mayura:v1',
+      }),
+    });
+    if (!resp.ok) {
+      console.error('Sarvam translate failed:', resp.status, await resp.text().catch(() => ''));
+      return null;
+    }
+    const data = await resp.json();
+    return data.translated_text || null;
+  } catch (err) {
+    console.error('Sarvam translate error:', err.message);
+    return null;
+  }
+}
+
+// Translate a product's name + description and store them in the *_bn columns.
+async function translateProductRow(id, name, description) {
+  try {
+    const [nameBn, descBn] = await Promise.all([
+      translateToBengali(name),
+      description ? translateToBengali(description) : Promise.resolve(null),
+    ]);
+    if (nameBn || descBn) {
+      await pool.query(
+        'UPDATE products SET name_bn = $1, description_bn = $2 WHERE id = $3',
+        [nameBn, descBn, id]
+      );
+      console.log(`Product #${id} translated to Bengali.`);
+    }
+  } catch (err) {
+    console.error(`Bengali translation failed for product #${id}:`, err.message);
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  API — Products
@@ -143,7 +204,11 @@ app.post('/api/products', requireAdmin, async (req, res) => {
        RETURNING *`,
       [gender, collection, name, size || null, price, stock, image, description || null]
     );
-    res.status(201).json(result.rows[0]);
+    const row = result.rows[0];
+    // Fire-and-forget: translate to Bengali in the background (don't make the
+    // admin wait on the Sarvam API).
+    translateProductRow(row.id, row.name, row.description);
+    res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -168,8 +233,36 @@ app.patch('/api/products/:id', requireAdmin, async (req, res) => {
       params
     );
     if (result.rowCount === 0) return res.status(404).json({ error: 'Product not found' });
-    res.json(result.rows[0]);
+    const row = result.rows[0];
+    // Re-translate if the name or description changed.
+    if (req.body.name !== undefined || req.body.description !== undefined) {
+      translateProductRow(row.id, row.name, row.description);
+    }
+    res.json(row);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/translate-products — backfill: translate every product that
+// doesn't yet have a Bengali name. Run once after adding the Sarvam key.
+app.post('/api/admin/translate-products', requireAdmin, async (req, res) => {
+  if (!process.env.SARVAM_API_KEY) {
+    return res.status(500).json({ error: 'SARVAM_API_KEY not configured' });
+  }
+  try {
+    const pending = await pool.query(
+      'SELECT id, name, description FROM products WHERE name_bn IS NULL'
+    );
+    // Translate sequentially to stay gentle on the Sarvam rate limit.
+    let done = 0;
+    for (const p of pending.rows) {
+      await translateProductRow(p.id, p.name, p.description);
+      done++;
+    }
+    res.json({ success: true, translated_count: done });
+  } catch (err) {
+    console.error('Backfill translate error:', err);
     res.status(500).json({ error: err.message });
   }
 });

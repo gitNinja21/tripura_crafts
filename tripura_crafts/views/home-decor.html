@@ -158,6 +158,19 @@
     }
     return img;
   }
+  // Feed product Bengali text into the i18n layer so cards translate.
+  function registerProductTranslations(list) {
+    const map = {};
+    (list || []).forEach(function (p) {
+      if (p.name && p.name_bn) map[p.name] = p.name_bn;
+      if (p.description && p.description_bn) map[p.description] = p.description_bn;
+    });
+    if (!Object.keys(map).length) return;
+    (function go(n) {
+      if (window.MwktaiI18n) window.MwktaiI18n.addTranslations(map);
+      else if (n > 0) setTimeout(function () { go(n - 1); }, 100);
+    })(20);
+  }
 
   async function loadProducts() {
     const grid = document.getElementById('product-grid');
@@ -189,6 +202,7 @@
         </div>
       </div>`;
     }).join('');
+    registerProductTranslations(products);
   }
 
   // ── Order Modal ───────────────────────────────────────────────────────────
@@ -298,5 +312,6 @@
 <!-- Razorpay Standard Checkout -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="/static/razorpay-checkout.js"></script>
+<script src="/static/i18n.js"></script>
 </body>
 </html>
