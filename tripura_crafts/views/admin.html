@@ -185,7 +185,7 @@
       </div>
       <div>
         <label>Collection</label>
-        <input type="text" id="product-collection" placeholder="risa, kubai, kamsoi…"/>
+        <select id="product-collection"></select>
       </div>
       <div class="full">
         <label>Product Name</label>
@@ -404,6 +404,30 @@
     loadInventory();
   }
 
+  // ── Collections per category — must match the storefront's collection
+  //    cards. Pick from these so a typo can't break storefront matching. ─────
+  const COLLECTIONS = {
+    womens:    ['risa', 'reang', 'pinon', 'jamatia', 'mog', 'hill'],
+    mens:      ['kubai', 'kamsoi', 'jummosulum', 'tuti'],
+    jewellery: ['silver'],
+    homedecor: ['decor'],
+  };
+
+  // Repopulate the Collection dropdown for the chosen category. If editing a
+  // product whose collection isn't in the list, keep it as an extra option.
+  function populateCollections(gender, selected) {
+    const sel  = document.getElementById('product-collection');
+    let list   = (COLLECTIONS[gender] || []).slice();
+    if (selected && !list.includes(selected)) list.unshift(selected);
+    sel.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+    if (selected) sel.value = selected;
+  }
+
+  // When the category changes, refresh the collection options.
+  document.getElementById('product-gender').addEventListener('change', function () {
+    populateCollections(this.value);
+  });
+
   // ── Product modal: add / edit ─────────────────────────────────────────────
   function openProductModal(id) {
     const editing = !!id;
@@ -411,7 +435,7 @@
     document.getElementById('product-modal-title').textContent = editing ? `Edit Product #${id}` : 'Add Product';
     document.getElementById('product-id').value          = editing ? id : '';
     document.getElementById('product-gender').value      = p.gender      || 'womens';
-    document.getElementById('product-collection').value  = p.collection  || '';
+    populateCollections(p.gender || 'womens', p.collection || '');
     document.getElementById('product-name').value        = p.name        || '';
     document.getElementById('product-size').value        = p.size        || '';
     document.getElementById('product-price').value       = p.price       != null ? p.price : '';
