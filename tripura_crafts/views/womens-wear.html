@@ -309,8 +309,10 @@
 
     const keys = ['risa','reang','pinon','jamatia','mog','hill'];
     const idx = keys.indexOf(key);
-    // offset by 1 after index 2 because drawer element sits at DOM position 3
-    if (idx >= 0) cards[idx >= 3 ? idx + 1 : idx].classList.add('active');
+    // cards[] only holds .coll-card elements (the drawer is excluded), so the
+    // index maps 1:1 — no offset. (The old `idx + 1` ran off the end of the
+    // list for the last card and crashed openDrawer before it could open.)
+    if (idx >= 0 && cards[idx]) cards[idx].classList.add('active');
 
     activeKey = key;
     inner.innerHTML = `<div class="coming-drawer"><p>Loading…</p></div>`;
