@@ -68,10 +68,10 @@
 <footer>© 2025 MWKTAI · ALL RIGHTS RESERVED</footer>
 <script>
   function choose(lang) {
-    // Remember the choice for a year, then enter the site.
+    // Remember the choice for a year, then enter the storefront homepage.
     document.cookie = 'mwktai_lang=' + lang + ';path=/;max-age=31536000';
     try { localStorage.setItem('mwktai_lang', lang); } catch (e) {}
-    window.location.href = '/';
+    window.location.href = '/home';
   }
 </script>
 </body>

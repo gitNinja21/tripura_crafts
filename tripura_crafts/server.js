@@ -60,17 +60,19 @@ const NAV_MAP = {
 };
 
 // ── Pages ──────────────────────────────────────────────────────────────────
+// '/' is the language landing page (English / বাংলা) — the site's front door.
 app.get('/', (req, res) => {
   const nav = req.query.nav;
   if (nav && NAV_MAP[nav]) return res.redirect(NAV_MAP[nav]);
-  // First visit (no language chosen) → show the language landing page.
-  const cookie = req.headers.cookie || '';
-  if (!/(?:^|;\s*)mwktai_lang=/.test(cookie)) {
-    return res.sendFile(view('landing.html'));
-  }
+  res.sendFile(view('landing.html'));
+});
+// '/home' is the actual storefront homepage (reached after picking a language).
+app.get('/home', (req, res) => {
+  const nav = req.query.nav;
+  if (nav && NAV_MAP[nav]) return res.redirect(NAV_MAP[nav]);
   res.sendFile(view('index.html'));
 });
-// Direct route to the landing page (used by the nav language switcher).
+// Alias kept for any links to the language page.
 app.get('/language', (_, res) => res.sendFile(view('landing.html')));
 app.get('/womens-wear',             (_, res) => res.sendFile(view('womens-wear.html')));
 app.get('/womens-wear/:collection', (_, res) => res.sendFile(view('womens-wear.html')));
