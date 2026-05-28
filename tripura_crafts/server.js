@@ -104,60 +104,6 @@ function requireAdmin(req, res, next) {
 app.get('/admin', requireAdmin, (_, res) => res.sendFile(view('admin.html')));
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Sarvam AI — English → Bengali translation
-// ═══════════════════════════════════════════════════════════════════════════
-// Translates one English string to Bengali. Returns null on any failure so a
-// translation hiccup never blocks a product save.
-async function translateToBengali(text) {
-  if (!text || !process.env.SARVAM_API_KEY) return null;
-  try {
-    const resp = await fetch('https://api.sarvam.ai/translate', {
-      method: 'POST',
-      headers: {
-        'api-subscription-key': process.env.SARVAM_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        input: String(text).slice(0, 1900),
-        source_language_code: 'en-IN',
-        target_language_code: 'bn-IN',
-        speaker_gender: 'Male',
-        mode: 'formal',
-        model: 'mayura:v1',
-      }),
-    });
-    if (!resp.ok) {
-      console.error('Sarvam translate failed:', resp.status, await resp.text().catch(() => ''));
-      return null;
-    }
-    const data = await resp.json();
-    return data.translated_text || null;
-  } catch (err) {
-    console.error('Sarvam translate error:', err.message);
-    return null;
-  }
-}
-
-// Translate a product's name + description and store them in the *_bn columns.
-async function translateProductRow(id, name, description) {
-  try {
-    const [nameBn, descBn] = await Promise.all([
-      translateToBengali(name),
-      description ? translateToBengali(description) : Promise.resolve(null),
-    ]);
-    if (nameBn || descBn) {
-      await pool.query(
-        'UPDATE products SET name_bn = $1, description_bn = $2 WHERE id = $3',
-        [nameBn, descBn, id]
-      );
-      console.log(`Product #${id} translated to Bengali.`);
-    }
-  } catch (err) {
-    console.error(`Bengali translation failed for product #${id}:`, err.message);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 //  API — Products
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -194,22 +140,31 @@ app.patch('/api/products/:id/stock', requireAdmin, async (req, res) => {
 // POST /api/products — create a new product (admin)
 app.post('/api/products', requireAdmin, async (req, res) => {
   try {
-    const { gender, collection, name, size, price, stock, image, description } = req.body || {};
+    const {
+      gender, collection, name, size, price, stock, image, description,
+      sku, name_bn, description_bn,
+    } = req.body || {};
     if (!gender || !collection || !name || price == null || stock == null || !image) {
       return res.status(400).json({
         error: 'gender, collection, name, price, stock and image are required',
       });
     }
     const result = await pool.query(
-      `INSERT INTO products (gender, collection, name, size, price, stock, image, description, active)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true)
+      `INSERT INTO products
+         (gender, collection, name, name_bn, size, price, stock, image,
+          description, description_bn, sku, active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true)
        RETURNING *`,
-      [gender, collection, name, size || null, price, stock, image, description || null]
+      [gender, collection, name, name_bn || null, size || null, price, stock, image,
+       description || null, description_bn || null, (sku && sku.trim()) || null]
     );
     const row = result.rows[0];
-    // Fire-and-forget: translate to Bengali in the background (don't make the
-    // admin wait on the Sarvam API).
-    translateProductRow(row.id, row.name, row.description);
+    // Auto-generate SKU (MWK-NNNN) if admin didn't supply one.
+    if (!row.sku) {
+      const skuVal = 'MWK-' + String(row.id).padStart(4, '0');
+      await pool.query('UPDATE products SET sku = $1 WHERE id = $2', [skuVal, row.id]);
+      row.sku = skuVal;
+    }
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -219,7 +174,8 @@ app.post('/api/products', requireAdmin, async (req, res) => {
 // PATCH /api/products/:id — update any subset of fields (admin)
 app.patch('/api/products/:id', requireAdmin, async (req, res) => {
   try {
-    const allowed = ['gender','collection','name','size','price','stock','image','description','active'];
+    const allowed = ['gender','collection','name','name_bn','size','price','stock',
+                     'image','description','description_bn','sku','active'];
     const sets = [];
     const params = [];
     for (const f of allowed) {
@@ -235,36 +191,33 @@ app.patch('/api/products/:id', requireAdmin, async (req, res) => {
       params
     );
     if (result.rowCount === 0) return res.status(404).json({ error: 'Product not found' });
-    const row = result.rows[0];
-    // Re-translate if the name or description changed.
-    if (req.body.name !== undefined || req.body.description !== undefined) {
-      translateProductRow(row.id, row.name, row.description);
-    }
-    res.json(row);
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/admin/translate-products — backfill: translate every product that
-// doesn't yet have a Bengali name. Run once after adding the Sarvam key.
-app.post('/api/admin/translate-products', requireAdmin, async (req, res) => {
-  if (!process.env.SARVAM_API_KEY) {
-    return res.status(500).json({ error: 'SARVAM_API_KEY not configured' });
-  }
+// POST /api/admin/delete-all-products — wipe products. Hard-deletes ones not
+// referenced by any order; soft-deletes the rest (so order history stays).
+app.post('/api/admin/delete-all-products', requireAdmin, async (req, res) => {
   try {
-    const pending = await pool.query(
-      'SELECT id, name, description FROM products WHERE name_bn IS NULL'
-    );
-    // Translate sequentially to stay gentle on the Sarvam rate limit.
-    let done = 0;
-    for (const p of pending.rows) {
-      await translateProductRow(p.id, p.name, p.description);
-      done++;
-    }
-    res.json({ success: true, translated_count: done });
+    const hard = await pool.query(`
+      DELETE FROM products
+        WHERE id NOT IN (
+          SELECT DISTINCT product_id FROM orders WHERE product_id IS NOT NULL
+        )
+        RETURNING id`);
+    const soft = await pool.query(`
+      UPDATE products SET active = false
+        WHERE active = true
+        RETURNING id`);
+    res.json({
+      success: true,
+      hard_deleted: hard.rowCount,
+      soft_deleted: soft.rowCount,
+    });
   } catch (err) {
-    console.error('Backfill translate error:', err);
+    console.error('Delete-all error:', err);
     res.status(500).json({ error: err.message });
   }
 });

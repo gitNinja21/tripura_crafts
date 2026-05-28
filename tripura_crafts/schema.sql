@@ -51,11 +51,20 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_order_id   VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_payment_id VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status      VARCHAR(20) NOT NULL DEFAULT 'pending';
 
--- Bengali translations of product text (auto-filled by the Sarvam API on
--- product save; admin stays English-only — these columns are never edited
--- by hand).
+-- Bilingual product text — typed directly in the admin form (no auto-translate).
 ALTER TABLE products ADD COLUMN IF NOT EXISTS name_bn        VARCHAR(200);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS description_bn TEXT;
+
+-- Stock-keeping unit (item code). Auto-generated as MWK-NNNN on insert if the
+-- admin doesn't supply one. Nullable so existing rows are valid before backfill.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sku VARCHAR(40);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes WHERE indexname = 'products_sku_unique'
+  ) THEN
+    CREATE UNIQUE INDEX products_sku_unique ON products (sku) WHERE sku IS NOT NULL;
+  END IF;
+END $$;
 
 -- Auto-update updated_at on every status change
 CREATE OR REPLACE FUNCTION update_updated_at()

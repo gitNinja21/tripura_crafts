@@ -142,9 +142,9 @@
         <p class="section-sub">Edit any field or add new products — changes reflect on the storefront immediately</p>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-cancel" onclick="translateProductsBn()" title="Fill in Bengali translations for any products that don't have them yet.">Translate to Bengali</button>
         <button class="btn-cancel" onclick="dedupeProducts()" title="Soft-delete duplicate rows (keeps highest-stock per product).">Clean up duplicates</button>
         <button class="btn-danger" onclick="purgeInactive()" title="Physically delete soft-deleted products that no order references.">Purge inactive</button>
+        <button class="btn-danger" onclick="deleteAllProducts()" title="Wipe ALL products. Hard-deletes those not referenced by orders; soft-deletes the rest.">Delete all products</button>
         <button class="add-product-btn" onclick="openProductModal()">+ Add Product</button>
       </div>
     </div>
@@ -176,6 +176,14 @@
     <input type="hidden" id="product-id"/>
     <div class="modal-grid">
       <div>
+        <label>SKU (optional — auto-generated)</label>
+        <input type="text" id="product-sku" placeholder="MWK-0001 (leave blank to auto-generate)"/>
+      </div>
+      <div>
+        <label>Size (optional)</label>
+        <input type="text" id="product-size" placeholder="S / M / L  (blank if unsized)"/>
+      </div>
+      <div>
         <label>Gender / Category</label>
         <select id="product-gender">
           <option value="womens">womens</option>
@@ -189,12 +197,12 @@
         <select id="product-collection"></select>
       </div>
       <div class="full">
-        <label>Product Name</label>
+        <label>Product Name — English</label>
         <input type="text" id="product-name" placeholder="Risa Heritage Set"/>
       </div>
-      <div>
-        <label>Size (optional)</label>
-        <input type="text" id="product-size" placeholder="S / M / L  (leave blank if unsized)"/>
+      <div class="full">
+        <label>Product Name — বাংলা (optional)</label>
+        <input type="text" id="product-name-bn" placeholder="রিসা হেরিটেজ সেট"/>
       </div>
       <div>
         <label>Price (₹)</label>
@@ -212,8 +220,12 @@
         <img id="product-image-preview" alt="" style="display:none;margin-top:8px;max-height:90px;border-radius:4px;border:1px solid rgba(200,151,42,0.25);"/>
       </div>
       <div class="full">
-        <label>Description</label>
+        <label>Description — English</label>
         <textarea id="product-description" rows="3" placeholder="Full handwoven Risa &amp; Rignai set…"></textarea>
+      </div>
+      <div class="full">
+        <label>Description — বাংলা (optional)</label>
+        <textarea id="product-description-bn" rows="3" placeholder="পূর্ণ হস্তবোনা রিসা ও রিগনাই সেট…"></textarea>
       </div>
     </div>
     <div class="modal-actions">
@@ -364,7 +376,7 @@
     el.innerHTML = `
       <table class="inv-table">
         <thead><tr>
-          <th>#</th><th></th><th>Collection</th><th>Product</th><th>Size</th>
+          <th>#</th><th>SKU</th><th></th><th>Collection</th><th>Product</th><th>Size</th>
           <th>Price</th><th>Stock</th><th></th>
         </tr></thead>
         <tbody>
@@ -373,9 +385,13 @@
             return `
             <tr>
               <td style="color:rgba(200,151,42,0.4);font-family:'Cinzel',serif;font-size:0.7rem">${p.id}</td>
+              <td style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(250,243,232,0.65)">${p.sku || '—'}</td>
               <td><img class="thumb" src="${imgSrc(p.image)}" alt="${p.name}" onerror="this.style.opacity=0.15"/></td>
               <td style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;color:var(--gold)">${p.collection}</td>
-              <td>${p.name}</td>
+              <td>
+                <div>${p.name}</div>
+                ${p.name_bn ? `<div style="font-size:0.85rem;color:rgba(250,243,232,0.55)">${p.name_bn}</div>` : ''}
+              </td>
               <td style="font-family:'Cinzel',serif;font-size:0.8rem">${p.size || '—'}</td>
               <td style="font-family:'Cinzel',serif;color:var(--gold)">₹${Number(p.price).toLocaleString('en-IN')}</td>
               <td>
@@ -434,15 +450,18 @@
     const editing = !!id;
     const p = editing ? allProducts.find(x => x.id === id) : {};
     document.getElementById('product-modal-title').textContent = editing ? `Edit Product #${id}` : 'Add Product';
-    document.getElementById('product-id').value          = editing ? id : '';
-    document.getElementById('product-gender').value      = p.gender      || 'womens';
+    document.getElementById('product-id').value             = editing ? id : '';
+    document.getElementById('product-sku').value            = p.sku         || '';
+    document.getElementById('product-gender').value         = p.gender      || 'womens';
     populateCollections(p.gender || 'womens', p.collection || '');
-    document.getElementById('product-name').value        = p.name        || '';
-    document.getElementById('product-size').value        = p.size        || '';
-    document.getElementById('product-price').value       = p.price       != null ? p.price : '';
-    document.getElementById('product-stock').value       = p.stock       != null ? p.stock : '';
-    document.getElementById('product-image').value       = p.image       || '';
-    document.getElementById('product-description').value = p.description || '';
+    document.getElementById('product-name').value           = p.name        || '';
+    document.getElementById('product-name-bn').value        = p.name_bn     || '';
+    document.getElementById('product-size').value           = p.size        || '';
+    document.getElementById('product-price').value          = p.price       != null ? p.price : '';
+    document.getElementById('product-stock').value          = p.stock       != null ? p.stock : '';
+    document.getElementById('product-image').value          = p.image       || '';
+    document.getElementById('product-description').value    = p.description    || '';
+    document.getElementById('product-description-bn').value = p.description_bn || '';
     document.getElementById('product-save-btn').textContent = editing ? 'Save Changes' : 'Add Product';
     // Reset / show the image uploader state
     document.getElementById('product-image-file').value = '';
@@ -504,14 +523,17 @@
   async function saveProduct() {
     const id = document.getElementById('product-id').value;
     const body = {
-      gender:      document.getElementById('product-gender').value,
-      collection:  document.getElementById('product-collection').value.trim(),
-      name:        document.getElementById('product-name').value.trim(),
-      size:        document.getElementById('product-size').value.trim() || null,
-      price:       parseInt(document.getElementById('product-price').value, 10),
-      stock:       parseInt(document.getElementById('product-stock').value, 10),
-      image:       document.getElementById('product-image').value.trim(),
-      description: document.getElementById('product-description').value.trim() || null,
+      sku:            document.getElementById('product-sku').value.trim() || null,
+      gender:         document.getElementById('product-gender').value,
+      collection:     document.getElementById('product-collection').value.trim(),
+      name:           document.getElementById('product-name').value.trim(),
+      name_bn:        document.getElementById('product-name-bn').value.trim() || null,
+      size:           document.getElementById('product-size').value.trim() || null,
+      price:          parseInt(document.getElementById('product-price').value, 10),
+      stock:          parseInt(document.getElementById('product-stock').value, 10),
+      image:          document.getElementById('product-image').value.trim(),
+      description:    document.getElementById('product-description').value.trim() || null,
+      description_bn: document.getElementById('product-description-bn').value.trim() || null,
     };
     if (!body.collection || !body.name || !body.image || !Number.isFinite(body.price) || !Number.isFinite(body.stock)) {
       alert('Collection, name, image, price and stock are required.');
@@ -555,13 +577,19 @@
     loadInventory();
   }
 
-  // ── Backfill Bengali translations via Sarvam ──────────────────────────────
-  async function translateProductsBn() {
-    if (!confirm('Translate all products that don’t yet have Bengali text? Uses the Sarvam API. May take a few seconds.')) return;
-    const res = await fetch('/api/admin/translate-products', { method: 'POST' });
+  // ── Wipe all products (test cleanup) ──────────────────────────────────────
+  async function deleteAllProducts() {
+    if (!confirm('Delete ALL products? Products with no orders are physically removed; ones tied to existing orders are soft-deleted (hidden) so order history stays intact. This cannot be undone.')) return;
+    if (!confirm('Are you absolutely sure? Type-confirm again — this wipes the whole catalog.')) return;
+    const res = await fetch('/api/admin/delete-all-products', { method: 'POST' });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) { alert('Translation failed: ' + (data.error || res.status)); return; }
-    alert(`✓ Translated ${data.translated_count} product(s) to Bengali.`);
+    if (!res.ok) { alert('Failed: ' + (data.error || res.status)); return; }
+    alert(
+      `✓ Catalog wiped.\n\n` +
+      `Hard-deleted: ${data.hard_deleted} (no orders)\n` +
+      `Soft-deleted: ${data.soft_deleted} (kept for order history)`
+    );
+    loadInventory();
   }
 
   // ── One-shot duplicate cleanup ────────────────────────────────────────────
