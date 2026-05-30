@@ -127,12 +127,15 @@
     <h2 class="section-title">All Orders</h2>
     <p class="section-sub">Click a status button to advance the order</p>
 
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="filterOrders(null, this)">All</button>
-      <button class="filter-btn" onclick="filterOrders('received', this)">Received</button>
-      <button class="filter-btn" onclick="filterOrders('confirmed', this)">Confirmed</button>
-      <button class="filter-btn" onclick="filterOrders('shipped', this)">Shipped</button>
-      <button class="filter-btn" onclick="filterOrders('delivered', this)">Delivered</button>
+    <div class="filter-row" style="justify-content:space-between;align-items:center;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="filter-btn active" onclick="filterOrders(null, this)">All</button>
+        <button class="filter-btn" onclick="filterOrders('received', this)">Received</button>
+        <button class="filter-btn" onclick="filterOrders('confirmed', this)">Confirmed</button>
+        <button class="filter-btn" onclick="filterOrders('shipped', this)">Shipped</button>
+        <button class="filter-btn" onclick="filterOrders('delivered', this)">Delivered</button>
+      </div>
+      <button class="btn-danger" onclick="deleteAllOrders()" title="Wipe ALL orders. Use for test-data cleanup; cannot be undone.">Delete all orders</button>
     </div>
 
     <div id="orders-container"></div>
@@ -316,10 +319,33 @@
   }
 
   function actionButtons(o) {
-    if (o.status === 'received')  return `<button class="action-btn" onclick="advanceStatus(${o.id},'confirmed')">Confirm</button>`;
-    if (o.status === 'confirmed') return `<button class="action-btn" onclick="openShipModal(${o.id})">Mark Shipped</button>`;
-    if (o.status === 'shipped')   return `<button class="action-btn" onclick="advanceStatus(${o.id},'delivered')">Mark Delivered</button>`;
-    return '<span style="font-size:0.8rem;color:rgba(250,243,232,0.2);font-family:Cinzel,serif;letter-spacing:0.1em">Done</span>';
+    let main;
+    if      (o.status === 'received')  main = `<button class="action-btn" onclick="advanceStatus(${o.id},'confirmed')">Confirm</button>`;
+    else if (o.status === 'confirmed') main = `<button class="action-btn" onclick="openShipModal(${o.id})">Mark Shipped</button>`;
+    else if (o.status === 'shipped')   main = `<button class="action-btn" onclick="advanceStatus(${o.id},'delivered')">Mark Delivered</button>`;
+    else                               main = '<span style="font-size:0.8rem;color:rgba(250,243,232,0.2);font-family:Cinzel,serif;letter-spacing:0.1em">Done</span>';
+    return `<div style="display:flex;gap:6px;align-items:center;">${main}<button class="btn-danger" onclick="deleteOrder(${o.id})" title="Delete order #${o.id}">×</button></div>`;
+  }
+
+  async function deleteOrder(id) {
+    if (!confirm('Delete order #' + id + '? This cannot be undone.')) return;
+    const res = await fetch('/api/orders/' + id, { method: 'DELETE' });
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      alert('Delete failed: ' + (e.error || res.status));
+      return;
+    }
+    loadOrders();
+  }
+
+  async function deleteAllOrders() {
+    if (!confirm('Delete ALL orders? This wipes the entire order history. Cannot be undone.')) return;
+    if (!confirm('Are you absolutely sure? Click Cancel if not.')) return;
+    const res = await fetch('/api/admin/delete-all-orders', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert('Failed: ' + (data.error || res.status)); return; }
+    alert(`✓ Deleted ${data.deleted_count} order(s).`);
+    loadOrders();
   }
 
   async function advanceStatus(id, status) {

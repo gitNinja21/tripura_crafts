@@ -701,6 +701,42 @@ app.patch('/api/orders/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/orders/:id — admin hard-delete one order.
+app.delete('/api/orders/:id', requireAdmin, async (req, res) => {
+  try {
+    if (dbDisabled()) {
+      const list = readOrdersFile();
+      const idx = list.findIndex(o => String(o.id) === String(req.params.id));
+      if (idx === -1) return res.status(404).json({ error: 'Order not found' });
+      list.splice(idx, 1);
+      writeOrdersFile(list);
+      return res.json({ success: true });
+    }
+    const result = await pool.query(
+      'DELETE FROM orders WHERE id = $1 RETURNING id', [req.params.id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Order not found' });
+    res.json({ success: true, id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/delete-all-orders — wipe every order (test cleanup).
+app.post('/api/admin/delete-all-orders', requireAdmin, async (req, res) => {
+  try {
+    if (dbDisabled()) {
+      writeOrdersFile([]);
+      return res.json({ success: true, deleted_count: 0 });
+    }
+    const result = await pool.query('DELETE FROM orders RETURNING id');
+    res.json({ success: true, deleted_count: result.rowCount });
+  } catch (err) {
+    console.error('Delete-all-orders error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 //  Reservation sweep
 // ═══════════════════════════════════════════════════════════════════════════
