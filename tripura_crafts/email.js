@@ -164,27 +164,4 @@ async function notifyCustomerShipped(order) {
   });
 }
 
-// ── Generic SMS helper (used by marketplace OTP + seller notifications) ───
-async function sendGenericSMS(phone, message) {
-  return sendSMS(phone, message);
-}
-
-// ── Email a seller a free-form message (used by marketplace notifications) ─
-async function sendSellerEmail(to, subject, body) {
-  if (!to) return;
-  await transporter.sendMail({
-    from: `"Mwktai" <${process.env.GMAIL_USER}>`,
-    to, subject,
-    html: `
-      <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#1a0a00;color:#FAF3E8;padding:32px;border-radius:8px;">
-        <h2 style="color:#C8972A;font-size:1.3rem;margin-bottom:14px;">${subject}</h2>
-        <div style="line-height:1.65;font-size:1rem;color:rgba(250,243,232,0.8);white-space:pre-wrap;">${body}</div>
-        <p style="margin-top:24px;color:rgba(250,243,232,0.3);font-size:0.85rem;">— Mwktai · Tripura Craftsmen</p>
-      </div>`,
-  });
-}
-
-module.exports = {
-  notifyAdmin, notifyCustomerConfirmed, notifyCustomerShipped,
-  sendSMS: sendGenericSMS, sendSellerEmail,
-};
+module.exports = { notifyAdmin, notifyCustomerConfirmed, notifyCustomerShipped };

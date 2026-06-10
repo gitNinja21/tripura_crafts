@@ -66,58 +66,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- ─────────────────────────────────────────────
---  Marketplace: sellers, sessions, OTPs
--- ─────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS sellers (
-  id               SERIAL PRIMARY KEY,
-  name             VARCHAR(150) NOT NULL,
-  phone            VARCHAR(15)  UNIQUE NOT NULL,
-  email            VARCHAR(150),
-  upi_id           VARCHAR(100),
-  bank_account     VARCHAR(50),
-  bank_ifsc        VARCHAR(15),
-  bank_holder_name VARCHAR(150),
-  commission_rate  NUMERIC(5,2) NOT NULL DEFAULT 15.00,  -- percent
-  status           VARCHAR(20)  NOT NULL DEFAULT 'active', -- pending|active|paused
-  created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
-);
-
--- Seed Mwktai's own seller row for products added directly via /admin.
-INSERT INTO sellers (name, phone, status, commission_rate)
-SELECT 'Mwktai', 'MWKTAI', 'active', 0
-WHERE NOT EXISTS (SELECT 1 FROM sellers WHERE phone = 'MWKTAI');
-
--- Link products to sellers + review state.
-ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id     INTEGER REFERENCES sellers(id);
-ALTER TABLE products ADD COLUMN IF NOT EXISTS review_status VARCHAR(20) NOT NULL DEFAULT 'approved';
-ALTER TABLE products ADD COLUMN IF NOT EXISTS review_note   TEXT;
-UPDATE products SET seller_id = (SELECT id FROM sellers WHERE phone = 'MWKTAI')
- WHERE seller_id IS NULL;
-
--- Order rows capture commission + payout at sale time (denormalised so changing
--- a commission rate later doesn't rewrite history).
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_id         INTEGER REFERENCES sellers(id);
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS commission_amount INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_payout     INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS payout_status     VARCHAR(20) NOT NULL DEFAULT 'pending'; -- pending|paid
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS payout_paid_at    TIMESTAMPTZ;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS payout_reference  VARCHAR(100);
-
--- Seller phone-OTP login: opaque session token + short-lived OTP store.
-CREATE TABLE IF NOT EXISTS seller_sessions (
-  token      VARCHAR(64) PRIMARY KEY,
-  seller_id  INTEGER NOT NULL REFERENCES sellers(id),
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE TABLE IF NOT EXISTS seller_otps (
-  phone      VARCHAR(15) PRIMARY KEY,
-  code       VARCHAR(6)  NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 -- Auto-update updated_at on every status change
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
