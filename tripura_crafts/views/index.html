@@ -602,18 +602,6 @@
       overflow: hidden;
     }
 
-    .founder-section::before {
-      content: '"';
-      position: absolute;
-      font-family: 'Playfair Display', serif;
-      font-size: 30rem;
-      color: rgba(200,151,42,0.03);
-      top: -60px;
-      left: -20px;
-      line-height: 1;
-      pointer-events: none;
-    }
-
     .founder-inner {
       max-width: 1100px;
       margin: 0 auto;
@@ -636,19 +624,16 @@
     @media (max-width: 960px) { .founder-divider-vert { display: none; } }
 
     .founder-avatar {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold), #a07020);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Cinzel Decorative', serif;
-      font-size: 2.2rem;
-      color: var(--deep);
-      font-weight: 700;
-      margin-bottom: 20px;
-      box-shadow: 0 8px 32px rgba(200,151,42,0.35);
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      object-position: center 35%;
+      border-radius: 14px;
+      border: 1px solid rgba(200,151,42,0.45);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.5), 0 0 0 1px rgba(200,151,42,0.18) inset;
+      margin-bottom: 22px;
     }
 
     .founder-badge-row { margin-bottom: 10px; }
@@ -923,7 +908,7 @@
 
       <!-- Founder's voice -->
       <div class="founder-left reveal">
-        <div class="founder-avatar">A</div>
+        <img class="founder-avatar" src="/static/arghya.jpg" alt="Arghya Ghosh, founder of Mwktai, at a Tripura handloom"/>
         <div class="founder-badge-row">
           <span class="founder-badge">✦ Founder's Voice</span>
         </div>
