@@ -188,17 +188,16 @@
     .card-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(26,10,0,0.95) 0%, rgba(26,10,0,0.3) 50%, transparent 100%);
+      background: linear-gradient(to top, rgba(26,10,0,0.92) 0%, rgba(26,10,0,0.55) 35%, rgba(26,10,0,0.05) 70%, transparent 100%);
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       padding: 30px;
-      opacity: 0;
-      transition: opacity 0.4s;
+      transition: background 0.4s;
     }
 
     .model-card:hover .card-overlay {
-      opacity: 1;
+      background: linear-gradient(to top, rgba(26,10,0,0.97) 0%, rgba(26,10,0,0.65) 45%, rgba(26,10,0,0.15) 80%, transparent 100%);
     }
 
     .card-tag {
@@ -761,7 +760,7 @@
     <div class="models-grid">
 
       <!-- Card 1 — Women's Wear -->
-      <div class="model-card reveal">
+      <div class="model-card reveal" onclick="navigateTo('womens_wear')" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateTo('womens_wear');}">
         <div class="corner-tl"></div>
         <div class="corner-br"></div>
         <div class="card-img-wrap">
@@ -779,7 +778,7 @@
       </div>
 
       <!-- Card 2 — Men's Wear -->
-      <div class="model-card reveal" style="transition-delay: 0.1s">
+      <div class="model-card reveal" style="transition-delay: 0.1s" onclick="navigateTo('mens_wear')" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateTo('mens_wear');}">
         <div class="corner-tl"></div>
         <div class="corner-br"></div>
         <div class="card-img-wrap">
@@ -797,7 +796,7 @@
       </div>
 
       <!-- Card 3 — Jewellery -->
-      <div class="model-card reveal" style="transition-delay: 0.2s">
+      <div class="model-card reveal" style="transition-delay: 0.2s" onclick="navigateTo('jewellery')" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateTo('jewellery');}">
         <div class="corner-tl"></div>
         <div class="corner-br"></div>
         <div class="card-img-wrap">
@@ -815,7 +814,7 @@
       </div>
 
       <!-- Card 4 — Home Décor -->
-      <div class="model-card reveal" style="transition-delay: 0.3s">
+      <div class="model-card reveal" style="transition-delay: 0.3s" onclick="navigateTo('home_decor')" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigateTo('home_decor');}">
         <div class="corner-tl"></div>
         <div class="corner-br"></div>
         <div class="card-img-wrap">
