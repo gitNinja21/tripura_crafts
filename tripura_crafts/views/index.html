@@ -702,6 +702,57 @@
       margin-bottom: 20px;
     }
 
+    /* ── Team strip (Co-Founder + Ops) ─────────────── */
+    .team-row {
+      max-width: 900px;
+      margin: 72px auto 0;
+      padding-top: 56px;
+      border-top: 1px solid rgba(200,151,42,0.18);
+      text-align: center;
+    }
+    .team-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.4em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    @media (max-width: 640px) {
+      .team-grid { grid-template-columns: 1fr; gap: 22px; }
+    }
+    .team-card {
+      padding: 26px 28px;
+      border: 1px solid rgba(200,151,42,0.15);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.025);
+      text-align: center;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .team-card:hover {
+      border-color: rgba(200,151,42,0.45);
+      transform: translateY(-3px);
+    }
+    .team-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--cream);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .team-role {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.28em;
+      color: rgba(250,243,232,0.55);
+      text-transform: uppercase;
+    }
+
     .vision-quote {
       margin-top: 32px;
       padding: 20px 28px;
@@ -947,6 +998,21 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- Team strip — co-founder + ops lead -->
+    <div class="team-row reveal">
+      <p class="team-eyebrow">✦ &nbsp; THE TEAM &nbsp; ✦</p>
+      <div class="team-grid">
+        <div class="team-card">
+          <h3 class="team-name">Parshasish</h3>
+          <p class="team-role">Co-Founder</p>
+        </div>
+        <div class="team-card">
+          <h3 class="team-name">Jenyan</h3>
+          <p class="team-role">Head of Operations &amp; Supply Chain</p>
+        </div>
+      </div>
     </div>
   </section>
 
